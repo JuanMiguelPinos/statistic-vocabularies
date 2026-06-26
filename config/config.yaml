@@ -1,0 +1,29 @@
+﻿dataset_mode: full
+
+paths:
+  tables_small: data/raw/tables_small
+  tables_full: data/raw/tables_full
+  titles: data/raw/titles
+  nuts: data/external/nuts
+
+  intermediate: runs/full/intermediate
+  processed: runs/full/processed
+  outputs: runs/full/outputs
+  logs: runs/full/logs
+
+processing:
+  year_min: 1900
+  year_max: 2100
+  use_cache: true
+  sample_limit: null
+  chunk_size: 20000
+  exclude_files:
+    - aact_ali01.csv
+
+classification:
+  allow_other: true
+  minimum_confidence: 0.70
+
+clustering:
+  number_of_domains: 17
+  method: tfidf_rules

@@ -1,0 +1,6 @@
+,predicted_measure,predicted_dimension_name,predicted_dimension_value,predicted_unit,predicted_other
+true_measure,20,0,2,3,0
+true_dimension_name,0,20,0,0,0
+true_dimension_value,0,0,16,4,0
+true_unit,0,0,0,13,0
+true_other,0,0,2,0,1

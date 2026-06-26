@@ -1,0 +1,18 @@
+domain,measure_count,average_score,high_confidence_count,medium_confidence_count,low_confidence_count
+Other or multidisciplinary,2844,0.0139,0,0,2844
+Labour market,1475,0.1692,1346,106,23
+"Science, technology and digital society",1266,0.1377,946,296,24
+Education and training,1042,0.2354,1016,20,6
+"Business, industry and trade",879,0.1953,372,453,54
+Demography and population,640,0.1495,122,500,18
+Economy and national accounts,557,0.1674,138,345,74
+Transport and mobility,462,0.2545,273,179,10
+"Income, poverty and living conditions",397,0.4643,389,8,0
+Health,336,0.1488,240,76,20
+"Agriculture, forestry and fisheries",279,0.2105,238,34,7
+Government and public finance,217,0.166,183,34,0
+Environment and climate,204,0.1488,151,36,17
+Energy,180,0.2327,81,90,9
+Housing and construction,158,0.172,144,14,0
+Tourism,138,0.3598,130,4,4
+"Crime, justice and safety",135,0.1531,82,45,8

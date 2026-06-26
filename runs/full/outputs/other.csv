@@ -1,0 +1,2 @@
+term,normalized_term,category,confidence,reason,table_count,total_occurrences,header_table_count,title_table_count,cell_table_count,unit_context_table_count,measure_context_table_count,generic_context_table_count,unit_only_table_count,measure_only_table_count,generic_only_table_count,mixed_context_table_count,unit_lexical_match,measure_lexical_match,sources,columns
+- - -,- - -,other,low,The term contains no usable alphanumeric content.,2,15,0,0,2,0,0,2,0,0,2,0,False,False,cell,Rail network segment (2005)|Rail network segment (2010)
