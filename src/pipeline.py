@@ -1,4 +1,4 @@
-﻿from src.classify_terms import (
+from src.classify_terms import (
     classify_global_vocabulary,
     save_classification_results,
 )

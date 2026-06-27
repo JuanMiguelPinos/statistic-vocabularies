@@ -1,4 +1,4 @@
-﻿from src.pipeline import run_pipeline
+from src.pipeline import run_pipeline
 
 
 def main() -> None:
