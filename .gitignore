@@ -1,11 +1,9 @@
 ﻿# Python cache and compiled files
-
-**pycache**/
+__pycache__/
 *.py[cod]
 *$py.class
 
 # Virtual environments
-
 .env
 .env.*
 .venv/
@@ -15,7 +13,6 @@ ENV/
 star_vocab/
 
 # IDE and editor files
-
 .vscode/
 .idea/
 .spyproject/
@@ -23,18 +20,15 @@ star_vocab/
 *.sublime-workspace
 
 # Operating-system files
-
 .DS_Store
 Thumbs.db
 desktop.ini
 
 # Jupyter
-
 .ipynb_checkpoints/
 *.nbconvert.ipynb
 
-# Test and coverage files
-
+# Tests and coverage
 .pytest_cache/
 .coverage
 .coverage.*
@@ -42,33 +36,29 @@ htmlcov/
 .tox/
 .nox/
 
-# Build and packaging files
-
+# Build and packaging
 build/
 dist/
 *.egg-info/
 .eggs/
 
 # Logs
-
 *.log
 runs/*/logs/*
+!runs/full/logs/
 !runs/full/logs/full_run_summary.txt
 
 # Raw datasets
-
 data/raw/
 data/external/nuts/*.xlsx
 
 # Large generated data
-
 data/intermediate/
 data/processed/
 runs/*/intermediate/
 runs/*/processed/
 
 # Compressed archives
-
 *.tgz
 *.tar
 *.tar.gz
@@ -78,7 +68,6 @@ runs/*/processed/
 *.rar
 
 # Temporary files
-
 *.tmp
 *.temp
 *.bak
@@ -88,18 +77,15 @@ runs/*/processed/
 .cache/
 
 # Local configuration overrides
-
 config/config.local.yaml
 config/config_private.yaml
 
-# Large debugging outputs
-
+# Debugging outputs
 debug/
 tmp/
 temp/
 
 # LaTeX auxiliary files
-
 *.aux
 *.bbl
 *.bcf
@@ -113,19 +99,3 @@ temp/
 *.synctex.gz
 *.toc
 *.xdv
-
-# Keep the final report PDF
-
-!report.pdf
-
-# Keep final outputs
-
-!runs/full/outputs/
-!runs/full/outputs/**
-!runs/small/outputs/
-!runs/small/outputs/**
-
-# Keep evaluation files and figures
-
-!evaluation/
-!evaluation/**
