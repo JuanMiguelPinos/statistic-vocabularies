@@ -2,112 +2,119 @@
 
 Automatic extraction, classification and organisation of statistical vocabulary from Eurostat tables.
 
-This project implements a complete pipeline that processes a large collection of statistical tables and transforms their textual content into a structured vocabulary. The system extracts temporal expressions, descriptive terms and geographical entities, builds a global vocabulary, classifies its terms and groups the detected measures into statistical domains.
+## Overview
 
-## Project overview
+This project implements a complete pipeline for extracting and organising statistical vocabulary from a large collection of Eurostat tables.
 
-For every statistical table (t), the pipeline performs the following operations:
+The pipeline processes table headers, descriptive columns and official titles in order to identify temporal expressions, textual terms and geographical entities. It then constructs a global vocabulary, classifies its terms into semantic categories and groups the extracted measures into statistical domains.
+
+The complete execution processed 7,604 tables successfully. One table was excluded because its internal GZIP stream was incomplete.
+
+The optional semantic-relations stage was not implemented.
+
+## Pipeline
+
+For each statistical table (t), the pipeline performs the following steps:
 
 1. Extract temporal expressions and intervals (D(t)).
 2. Extract the duplicate-free set (S(t)) of non-numeric strings from the descriptive columns.
 3. Identify geographical terms (Geo(t)) using the NUTS nomenclature.
-4. Remove geographical terms:
+4. Remove geographical terms to obtain `V(t) = S(t) - Geo(t)`.
+5. Process the official title and add its residual semantic content to (V(t)).
+6. Combine the table vocabularies into a global vocabulary (V).
+7. Classify every term as:
 
-[
-V(t) = S(t) \setminus Geo(t)
-]
-
-5. Process the table title and add its residual semantic content to (V(t)).
-6. Construct the global vocabulary:
-
-[
-V = \bigcup_t V(t)
-]
-
-7. Classify the global vocabulary into:
-
-   * measures;
-   * dimension names;
-   * dimension values;
-   * units;
-   * other terms.
-8. Assign every detected measure to one of seventeen statistical domains.
+   * measure;
+   * dimension name;
+   * dimension value;
+   * unit;
+   * other.
+8. Assign every measure to one of seventeen statistical domains.
 9. Evaluate vocabulary classification and domain assignment using manually annotated samples.
 
-The optional semantic-relation stage was not implemented.
-
----
-
-## Main results
+## Final results
 
 The original collection contained 7,605 tables.
 
-One table, `aact_ali01.csv`, was excluded because its internal GZIP stream was incomplete. The integrity of the downloaded archive was verified, which indicates that the problem was associated with the internal file rather than with the local download.
+The file `aact_ali01.csv` was excluded because its internal GZIP stream ended before the expected end-of-stream marker. The integrity of the original downloaded archive was verified, indicating that the problem was associated with the internal file rather than with an incomplete local download.
 
-The final execution processed 7,604 tables successfully.
+| Result                                      |     Value |
+| ------------------------------------------- | --------: |
+| Original tables                             |     7,605 |
+| Excluded tables                             |         1 |
+| Selected tables                             |     7,604 |
+| Successfully processed tables               |     7,604 |
+| Tables with processing errors               |         0 |
+| Extracted temporal intervals                |   198,090 |
+| Tables without detected dates               |        31 |
+| Distinct table-term pairs in (S(t))         | 1,151,463 |
+| Distinct provisional vocabulary terms       |   159,477 |
+| Geographical table-term pairs               |   413,625 |
+| Distinct geographical terms                 |     3,558 |
+| Remaining non-geographical table-term pairs |   737,838 |
+| Remaining non-geographical terms            |   155,919 |
+| Final table-term pairs                      |   745,418 |
+| Distinct terms in the final vocabulary      |   162,236 |
 
-| Result                                |     Value |
-| ------------------------------------- | --------: |
-| Original tables                       |     7,605 |
-| Excluded tables                       |         1 |
-| Selected tables                       |     7,604 |
-| Successfully processed tables         |     7,604 |
-| Tables with errors                    |         0 |
-| Extracted temporal intervals          |   198,090 |
-| Distinct table-term pairs in (S(t))   | 1,151,463 |
-| Distinct provisional vocabulary terms |   159,477 |
-| Geographical table-term pairs         |   413,625 |
-| Distinct geographical terms           |     3,558 |
-| Final table-term pairs                |   745,418 |
-| Distinct terms in (V)                 |   162,236 |
+## Vocabulary classification
 
-### Vocabulary classification
+The 162,236 terms in the final vocabulary were assigned to exactly one semantic category.
 
-| Category         |   Terms | Percentage |
-| ---------------- | ------: | ---------: |
-| Measures         |  11,209 |      6.91% |
-| Dimension names  |  15,204 |      9.37% |
-| Dimension values | 132,992 |     81.97% |
-| Units            |   2,830 |      1.74% |
-| Other            |       1 |     <0.01% |
-| Total            | 162,236 |       100% |
-
-The classification totals satisfy:
-
-[
-11,209 + 15,204 + 132,992 + 2,830 + 1 = 162,236
-]
-
-### Domain assignment
-
-The 11,209 measures were assigned to seventeen statistical domains.
-
-| Confidence level | Assignments | Percentage |
+| Category         |       Terms | Percentage |
 | ---------------- | ----------: | ---------: |
-| High             |       5,851 |     52.20% |
-| Medium           |       2,240 |     19.98% |
-| Low              |       3,118 |     27.82% |
-| Total            |      11,209 |       100% |
+| Measures         |      11,209 |      6.91% |
+| Dimension names  |      15,204 |      9.37% |
+| Dimension values |     132,992 |     81.97% |
+| Units            |       2,830 |      1.74% |
+| Other            |           1 |     <0.01% |
+| **Total**        | **162,236** |   **100%** |
 
-The largest groups were:
+The classification satisfies the consistency check:
 
-| Domain                                  | Measures |
-| --------------------------------------- | -------: |
-| Other or multidisciplinary              |    2,844 |
-| Labour market                           |    1,475 |
-| Science, technology and digital society |    1,266 |
-| Education and training                  |    1,042 |
-| Business, industry and trade            |      879 |
+```text
+11,209 + 15,204 + 132,992 + 2,830 + 1 = 162,236
+```
 
----
+## Measure-domain assignment
+
+All 11,209 measures were assigned to one of seventeen statistical domains.
+
+| Confidence | Assignments | Percentage |
+| ---------- | ----------: | ---------: |
+| High       |       5,851 |     52.20% |
+| Medium     |       2,240 |     19.98% |
+| Low        |       3,118 |     27.82% |
+| **Total**  |  **11,209** |   **100%** |
+
+The complete distribution is:
+
+| Domain                                  | Measures | Average score |
+| --------------------------------------- | -------: | ------------: |
+| Other or multidisciplinary              |    2,844 |        0.0139 |
+| Labour market                           |    1,475 |        0.1692 |
+| Science, technology and digital society |    1,266 |        0.1377 |
+| Education and training                  |    1,042 |        0.2354 |
+| Business, industry and trade            |      879 |        0.1953 |
+| Demography and population               |      640 |        0.1495 |
+| Economy and national accounts           |      557 |        0.1674 |
+| Transport and mobility                  |      462 |        0.2545 |
+| Income, poverty and living conditions   |      397 |        0.4643 |
+| Health                                  |      336 |        0.1488 |
+| Agriculture, forestry and fisheries     |      279 |        0.2105 |
+| Government and public finance           |      217 |        0.1660 |
+| Environment and climate                 |      204 |        0.1488 |
+| Energy                                  |      180 |        0.2327 |
+| Housing and construction                |      158 |        0.1720 |
+| Tourism                                 |      138 |        0.3598 |
+| Crime, justice and safety               |      135 |        0.1531 |
 
 ## Evaluation
 
 Two manually annotated samples were used to evaluate the semantic stages.
 
-### Vocabulary classification evaluation
+### Vocabulary classification
 
-The evaluation sample contained 81 manually labelled terms.
+The classification sample contained 81 manually labelled terms.
 
 | Metric                |  Value |
 | --------------------- | -----: |
@@ -115,8 +122,6 @@ The evaluation sample contained 81 manually labelled terms.
 | Correct predictions   |     70 |
 | Incorrect predictions |     11 |
 | Accuracy              | 86.42% |
-
-Per-category results:
 
 | Category        | Precision | Recall | F1-score | Support |
 | --------------- | --------: | -----: | -------: | ------: |
@@ -132,7 +137,7 @@ Run the evaluation with:
 python evaluar_clasificacion.py
 ```
 
-Generated files:
+The generated files are:
 
 ```text
 evaluation/classification_metrics.csv
@@ -141,15 +146,15 @@ evaluation/classification_confusion_matrix.csv
 evaluation/figures/classification_confusion_matrix.png
 ```
 
-### Domain-assignment evaluation
+### Domain assignment
 
-The domain evaluation sample contained 85 manually annotated measures.
+The domain sample contained 85 manually labelled measures.
 
 | Metric                |  Value |
 | --------------------- | -----: |
 | Evaluated measures    |     85 |
-| Correct predictions   |     73 |
-| Incorrect predictions |     12 |
+| Correct assignments   |     73 |
+| Incorrect assignments |     12 |
 | Accuracy              | 85.88% |
 | Macro F1-score        | 0.8459 |
 | Weighted F1-score     | 0.8717 |
@@ -160,7 +165,7 @@ Run the evaluation with:
 python evaluar_dominios.py
 ```
 
-Generated files:
+The generated files are:
 
 ```text
 evaluation/domain_metrics.csv
@@ -169,18 +174,14 @@ evaluation/domain_confusion_matrix.csv
 evaluation/figures/domain_confusion_matrix.png
 ```
 
-The manually annotated samples must not be regenerated unless a new evaluation is intentionally required.
+The manually annotated samples should not be regenerated during normal use.
 
-Do not run:
+The following scripts create new samples and may overwrite the current annotations:
 
 ```bash
 python preparar_evaluacion.py
 python preparar_evaluacion_dominios.py
 ```
-
-These scripts may overwrite the existing manual annotations.
-
----
 
 ## Repository structure
 
@@ -188,35 +189,33 @@ These scripts may overwrite the existing manual annotations.
 statistic-vocabularies/
 ├── config/
 │   └── config.yaml
-├── data/
-│   ├── external/
-│   │   └── nuts/
-│   ├── raw/
-│   │   ├── tables_small/
-│   │   ├── tables_full/
-│   │   └── titles/
-│   ├── intermediate/
-│   └── processed/
 ├── evaluation/
 │   ├── figures/
+│   │   ├── classification_confusion_matrix.png
+│   │   └── domain_confusion_matrix.png
+│   ├── classification_confusion_matrix.csv
 │   ├── classification_metrics.csv
 │   ├── classification_report.csv
-│   ├── classification_confusion_matrix.csv
-│   ├── domain_metrics.csv
 │   ├── domain_classification_report.csv
 │   ├── domain_confusion_matrix.csv
-│   ├── gold_sample.csv
-│   └── domain_gold_sample.csv
+│   ├── domain_gold_sample.csv
+│   ├── domain_metrics.csv
+│   └── gold_sample.csv
+├── prompts/
+│   ├── domain_assignment.txt
+│   └── term_classification.txt
+├── report/
+│   ├── statistic_vocabularies.tex
+│   └── statistic_vocabularies.pdf
 ├── runs/
-│   ├── small/
-│   │   ├── intermediate/
-│   │   ├── outputs/
-│   │   └── logs/
-│   └── full/
-│       ├── intermediate/
-│       ├── outputs/
-│       └── logs/
+│   ├── full/
+│   │   ├── logs/
+│   │   │   └── full_run_summary.txt
+│   │   └── outputs/
+│   └── small/
+│       └── outputs/
 ├── src/
+│   ├── __init__.py
 │   ├── classify_terms.py
 │   ├── cluster_measures.py
 │   ├── config.py
@@ -226,70 +225,67 @@ statistic-vocabularies/
 │   ├── extract_vocabulary.py
 │   ├── io_utils.py
 │   ├── pipeline.py
-│   ├── process_titles.py
-│   └── semantic_relations.py
-├── main.py
+│   └── process_titles.py
+├── anotar_dominios.py
+├── anotar_muestra.py
 ├── evaluar_clasificacion.py
 ├── evaluar_dominios.py
+├── main.py
+├── preparar_evaluacion.py
+├── preparar_evaluacion_dominios.py
 ├── probar_tabla_grande.py
 ├── requirements.txt
 ├── .gitignore
-├── README.md
-└── report.pdf
+└── README.md
 ```
 
-The original statistical tables and the large intermediate files are not included in the repository.
-
----
+The original datasets and large intermediate files are excluded from the repository.
 
 ## Requirements
 
-The project was developed with:
+The project was developed and tested with Python 3.11.
 
-* Python 3.11
-* pandas
-* NumPy
-* scikit-learn
-* openpyxl
-* PyYAML
-* tqdm
-* matplotlib
+Main dependencies:
 
-A solid-state drive is recommended for processing the complete collection.
+* pandas;
+* NumPy;
+* scikit-learn;
+* openpyxl;
+* PyYAML;
+* tqdm;
+* Unidecode;
+* matplotlib.
 
-The extracted full dataset occupies approximately 100 GB. Internet access is not required after the resources have been downloaded.
-
----
-
-## Installation
-
-### 1. Clone the repository
-
-```bash
-git clone [PUBLIC_REPOSITORY_URL]
-cd statistic-vocabularies
-```
-
-### 2. Create a Conda environment
+Create and activate a Conda environment:
 
 ```bash
 conda create -n star_vocab python=3.11
 conda activate star_vocab
 ```
 
-### 3. Install the dependencies
+Install the dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
 ## Required data
 
-The datasets are not included because of their size.
+The original data are not stored in the repository because of their size.
 
-### Statistical tables
+Create the following local structure:
+
+```text
+data/
+├── external/
+│   └── nuts/
+│       └── NUTS2021-NUTS2024.xlsx
+└── raw/
+    ├── tables_small/
+    ├── tables_full/
+    └── titles/
+        └── file-names_to_titles_eurostat_unfiltered.csv
+```
 
 Place the reduced table collection in:
 
@@ -297,53 +293,23 @@ Place the reduced table collection in:
 data/raw/tables_small/
 ```
 
-Place the complete collection in:
+Place the complete table collection in:
 
 ```text
 data/raw/tables_full/
 ```
 
-Some files use the `.csv` extension but contain internally GZIP-compressed data. Compression is detected automatically by the pipeline.
-
-### Table-title mapping
-
-Place the title file in:
-
-```text
-data/raw/titles/
-```
-
-Expected filename:
-
-```text
-file-names_to_titles_eurostat_unfiltered.csv
-```
-
-### NUTS nomenclature
-
-Place the geographical workbook in:
-
-```text
-data/external/nuts/
-```
-
-Expected filename:
-
-```text
-NUTS2021-NUTS2024.xlsx
-```
-
----
+Some files use the `.csv` extension but are internally GZIP-compressed. The pipeline detects compression automatically.
 
 ## Configuration
 
-The pipeline is configured through:
+The pipeline is controlled by:
 
 ```text
 config/config.yaml
 ```
 
-Example configuration for the complete dataset:
+Example full-dataset configuration:
 
 ```yaml
 dataset_mode: full
@@ -361,77 +327,39 @@ paths:
 processing:
   year_min: 1900
   year_max: 2100
-  use_cache: true
   sample_limit: null
-  random_seed: 42
   chunk_size: 20000
   exclude_files:
     - aact_ali01.csv
-
-classification:
-  allow_other: true
-  minimum_confidence: 0.70
-
-clustering:
-  number_of_domains: 17
-  method: tfidf_rules
 ```
 
-### Reduced execution
-
-Use:
+For the reduced dataset, change:
 
 ```yaml
 dataset_mode: small
 ```
 
-The reduced dataset is recommended for development and reproducibility tests.
-
-### Full execution
-
-Use:
-
-```yaml
-dataset_mode: full
-```
-
-and:
-
-```yaml
-sample_limit: null
-```
-
-### Limited test
-
-To process only a small number of files:
+To limit a test execution to a fixed number of tables, use:
 
 ```yaml
 sample_limit: 3
 ```
 
-### Chunk size
-
-Large tables are read incrementally:
+For the complete execution, use:
 
 ```yaml
-chunk_size: 20000
+sample_limit: null
 ```
-
-A smaller block size reduces peak memory usage but may increase execution time.
-
----
 
 ## Running the pipeline
 
-From the repository root, run:
+Run the complete pipeline from the project root:
 
 ```bash
 python main.py
 ```
 
-The program executes steps 1 to 7 sequentially.
-
-A complete execution generates intermediate files and final outputs in the directories configured in `config.yaml`.
+The pipeline executes steps 1 to 7 sequentially.
 
 To test a large table independently:
 
@@ -439,167 +367,65 @@ To test a large table independently:
 python probar_tabla_grande.py
 ```
 
----
+## Output files
 
-## Pipeline stages
-
-### Step 1: temporal extraction
-
-The table headers are analysed to detect individual years and temporal ranges.
-
-Outputs:
-
-```text
-table_dates.csv
-table_dates_summary.csv
-```
-
-### Step 2: extraction of (S(t))
-
-The pipeline identifies the leftmost descriptive columns and extracts their distinct non-numeric strings.
-
-Large tables are processed in blocks, and only the required descriptive columns are loaded.
-
-Outputs:
-
-```text
-table_strings.csv
-global_table_vocabulary.csv
-table_strings_summary.csv
-```
-
-### Step 3: geographical filtering
-
-A geographical dictionary is created from the NUTS workbook.
-
-Terms matching geographical names, codes or aliases are stored separately and removed from the provisional vocabulary.
-
-Outputs:
-
-```text
-geography_dictionary.csv
-table_geographies.csv
-table_vocabulary_without_geo.csv
-```
-
-### Steps 4 and 5: title processing and global vocabulary
-
-Every table is associated with its official title.
-
-Dates and geographical references are removed from the title, and the remaining semantic expression is incorporated into the table vocabulary.
-
-Outputs:
-
-```text
-title_processing.csv
-global_vocabulary.csv
-```
-
-### Step 6: vocabulary classification
-
-Every term is assigned to exactly one category:
-
-* measure;
-* dimension name;
-* dimension value;
-* unit;
-* other.
-
-Outputs:
-
-```text
-classification_all.csv
-measures.csv
-dimension_names.csv
-dimension_values.csv
-units.csv
-other.csv
-```
-
-### Step 7: domain assignment
-
-Measures are assigned to one of seventeen statistical domains using high-precision lexical rules and TF-IDF similarity.
-
-Outputs:
-
-```text
-measure_domains.csv
-domain_summary.csv
-domain_examples.csv
-```
-
----
-
-## Final output files
-
-The main final files are located in:
+The complete execution stores its final results in:
 
 ```text
 runs/full/outputs/
 ```
 
-Expected files:
+The main files are:
 
 ```text
 classification_all.csv
-measures.csv
+classification_summary.csv
 dimension_names.csv
 dimension_values.csv
-units.csv
-other.csv
-measure_domains.csv
-domain_summary.csv
 domain_examples.csv
+domain_summary.csv
+measure_domains.csv
+measures.csv
+other.csv
+units.csv
 ```
 
-Intermediate evidence is generated in:
+The reduced execution stores its results in:
 
 ```text
-runs/full/intermediate/
+runs/small/outputs/
 ```
-
-These intermediate files can be very large and are therefore excluded from version control.
-
----
 
 ## Processing performance
 
-The complete execution was performed locally with a block size of 20,000 rows.
+The complete execution used blocks of 20,000 rows.
 
-| Stage                 |        Time |
-| --------------------- | ----------: |
-| Temporal extraction   |  5 min 09 s |
-| Vocabulary extraction | 46 min 36 s |
+| Stage                        |        Time |
+| ---------------------------- | ----------: |
+| Temporal interval extraction |  5 min 09 s |
+| Table vocabulary extraction  | 46 min 36 s |
 
-Vocabulary extraction was the most expensive stage because it required reading and decompressing the descriptive content of all selected tables.
+Vocabulary extraction was the most expensive stage because it had to read and decompress the descriptive content of all selected tables.
 
-The later stages worked mainly with smaller intermediate files and completed substantially faster.
+The later stages processed smaller intermediate files and completed substantially faster.
 
-Execution time depends mainly on:
+Execution time mainly depends on:
 
 * CPU performance;
 * GZIP decompression speed;
 * disk read speed;
-* source-file size;
+* table size;
 * selected block size.
 
-Internet speed does not affect the pipeline once the datasets have been downloaded.
-
----
+Internet speed does not affect processing once the resources have been downloaded.
 
 ## Error handling
 
-### Incomplete GZIP file
+### Incomplete GZIP stream
 
-The file:
+The file `aact_ali01.csv` was excluded because its GZIP content was incomplete.
 
-```text
-aact_ali01.csv
-```
-
-was excluded because its internal GZIP stream ended before the expected end-of-stream marker.
-
-The original archive hash was verified successfully, so the problem was not caused by an incomplete local download.
+The integrity hash of the original archive was verified successfully, so the issue was not caused by an incomplete local download.
 
 ### Malformed quotation marks
 
@@ -612,117 +438,73 @@ prc_dap14.csv
 prc_dap15.csv
 ```
 
-For these files, quotation marks were treated as ordinary characters during vocabulary extraction. All four files were processed successfully in the final execution.
-
----
+For these four files, quotation marks were treated as ordinary characters during parsing. All four files were successfully processed in the final execution.
 
 ## Known limitations
 
-* The classification approach is mainly rule-based and depends on lexical evidence.
-* The same term may have different semantic roles in different tables.
+* The classification method depends mainly on lexical and structural rules.
+* The same expression may have different roles in different table contexts.
 * Units and dimension values can be difficult to distinguish.
-* Complete title residuals may combine measures and dimensions.
+* Residual titles may combine measures, dimensions and populations.
 * Geographical recognition is limited to the supplied NUTS resources.
-* Generic measures are difficult to assign to a specialised domain.
-* Domain assignment is single-label even when a measure may belong to several domains.
-* The manual evaluation samples represent only a small subset of the complete vocabulary.
-* The optional semantic-relation stage was not implemented.
-
----
+* Generic measures can be difficult to assign to a specialised domain.
+* Domain assignment uses one main label per measure.
+* The manually annotated evaluation samples cover only part of the vocabulary.
+* The optional semantic-relations stage was not implemented.
 
 ## Reproducibility
 
 All project paths are relative to the repository root.
 
-The random seed is fixed to:
+A reduced execution can be used to verify the complete workflow without processing the full collection:
 
-```yaml
-random_seed: 42
-```
-
-To verify reproducibility without processing the complete dataset:
-
-1. Install the required environment.
-2. Place the reduced dataset in `data/raw/tables_small/`.
-3. Set:
-
-```yaml
-dataset_mode: small
-```
-
-4. Run:
+1. Place the reduced tables in `data/raw/tables_small/`.
+2. Set `dataset_mode: small`.
+3. Run:
 
 ```bash
 python main.py
 ```
 
-The reduced execution should generate the complete set of intermediate and final files.
-
----
+The reduced run should generate the complete set of output files.
 
 ## Use of AI tools
 
-AI tools were used as support for:
+AI tools were used as development support for:
 
 * code review;
 * debugging;
-* documentation;
+* analysis of CSV and GZIP errors;
 * discussion of implementation alternatives;
-* design of the evaluation process;
-* analysis of parsing and compression errors.
+* evaluation design;
+* documentation drafting.
 
-All proposed modifications were reviewed, executed and validated manually.
+The production pipeline does not call an external LLM or generative AI service. Vocabulary classification is based on lexical and structural rules, while domain assignment combines rules with TF-IDF similarity.
 
-The final classifications, evaluation samples and reported results were inspected using the generated project outputs.
-
----
+All code modifications, evaluation labels and reported results were reviewed and validated manually.
 
 ## Report
 
-The final report is available as:
+The final report and its LaTeX source are available in:
 
 ```text
-report.pdf
+report/statistic_vocabularies.pdf
+report/statistic_vocabularies.tex
 ```
 
-It describes:
-
-* input resources;
-* project architecture;
-* temporal extraction;
-* vocabulary extraction;
-* geographical recognition;
-* title processing;
-* vocabulary classification;
-* domain assignment;
-* evaluation;
-* implementation decisions;
-* limitations;
-* conclusions.
-
----
-
-## Repository
-
-Public repository:
-
-```text
-[PUBLIC_REPOSITORY_URL]
-```
-
----
+The report describes the methodology, implementation, results, evaluation, limitations and conclusions of the project.
 
 ## Project status
 
-* [x] Temporal extraction
+* [x] Temporal interval extraction
 * [x] Descriptive vocabulary extraction
 * [x] Geographical filtering
 * [x] Title processing
 * [x] Global vocabulary construction
 * [x] Vocabulary classification
 * [x] Measure-domain assignment
-* [x] Manual vocabulary evaluation
+* [x] Manual classification evaluation
 * [x] Manual domain evaluation
 * [x] Full dataset execution
-* [x] Report
+* [x] Final report
 * [ ] Optional semantic relations

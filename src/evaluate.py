@@ -28,12 +28,6 @@ def create_stratified_gold_sample(
     samples_per_category: int = 20,
     random_state: int = 42,
 ) -> pd.DataFrame:
-    """
-    Crea una muestra estratificada para evaluar manualmente
-    la clasificación del vocabulario.
-
-    Se intenta incluir evidencia de confianza alta, media y baja.
-    """
     required_columns = {
         "term",
         "normalized_term",
@@ -56,7 +50,7 @@ def create_stratified_gold_sample(
         )
 
         raise ValueError(
-            "Faltan columnas en classification_all.csv: "
+            "Columns are missing in classification_all.csv: "
             f"{missing_text}"
         )
 
@@ -77,8 +71,6 @@ def create_stratified_gold_sample(
 
         selected_indices: set[int] = set()
 
-        # Primera fase: tomar ejemplos de cada nivel
-        # de confianza.
         confidence_target = max(
             1,
             target_size // len(CONFIDENCE_ORDER),
@@ -116,7 +108,6 @@ def create_stratified_gold_sample(
                 sampled.index.tolist()
             )
 
-        # Segunda fase: completar hasta el tamaño deseado.
         remaining_needed = (
             target_size - len(selected_indices)
         )
@@ -155,7 +146,7 @@ def create_stratified_gold_sample(
 
     if not sampled_parts:
         raise ValueError(
-            "No se pudo crear ninguna muestra de evaluación."
+            "No evaluation sample could be created."
         )
 
     sample = pd.concat(
@@ -200,7 +191,6 @@ def save_gold_sample(
     sample: pd.DataFrame,
     output_path: Path,
 ) -> None:
-    """Guarda la muestra que se revisará manualmente."""
     output_path.parent.mkdir(
         parents=True,
         exist_ok=True,

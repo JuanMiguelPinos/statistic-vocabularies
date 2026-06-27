@@ -124,7 +124,6 @@ MEASURE_KEYWORDS = {
 
 
 def normalize_context(value: object) -> str:
-    """Normaliza términos y nombres de columnas."""
     text = unidecode(str(value))
     text = text.casefold()
     text = text.replace("\\time", "")
@@ -135,7 +134,6 @@ def normalize_context(value: object) -> str:
 
 
 def split_pipe_values(value: object) -> set[str]:
-    """Divide valores almacenados con el separador |."""
     if pd.isna(value):
         return set()
 
@@ -147,7 +145,6 @@ def split_pipe_values(value: object) -> set[str]:
 
 
 def column_is_unit(column_name: str) -> bool:
-    """Identifica columnas dedicadas a unidades."""
     normalized = normalize_context(column_name)
 
     if normalized in UNIT_COLUMN_NAMES:
@@ -157,12 +154,6 @@ def column_is_unit(column_name: str) -> bool:
 
 
 def column_is_measure(column_name: str) -> bool:
-    """
-    Identifica columnas cuyos valores representan medidas.
-
-    No considera como medidas las clasificaciones o categorizaciones
-    que simplemente incluyen la palabra indicator.
-    """
     normalized = normalize_context(column_name)
 
     if any(
@@ -179,9 +170,7 @@ def column_is_measure(column_name: str) -> bool:
 
     return False
 
-
 def looks_like_unit(term: str) -> bool:
-    """Detecta expresiones propias de unidades estadísticas."""
     normalized = normalize_context(term)
 
     if any(
@@ -206,7 +195,6 @@ def looks_like_unit(term: str) -> bool:
 
 
 def looks_like_measure(term: str) -> bool:
-    """Detecta expresiones habituales de medidas estadísticas."""
     normalized = normalize_context(term)
 
     return any(
@@ -215,13 +203,7 @@ def looks_like_measure(term: str) -> bool:
     )
 
 def looks_like_dimension_value(term: str) -> bool:
-    """
-    Detecta expresiones que contienen una unidad, pero que realmente
-    representan categorías o valores de una dimensión.
-    """
     normalized = normalize_context(term)
-
-    # Agregados geográficos que contienen la palabra euro.
     geographical_aggregate_prefixes = (
         "euro area",
         "extra euro area",
@@ -235,7 +217,6 @@ def looks_like_dimension_value(term: str) -> bool:
     ):
         return True
 
-    # Intervalos, umbrales y categorías cuantitativas.
     category_prefixes = (
         "less than ",
         "more than ",
@@ -256,29 +237,14 @@ def looks_like_dimension_value(term: str) -> bool:
     return False
 
 def is_invalid_term(term: str) -> bool:
-    """
-    Detecta términos realmente inválidos.
-
-    Una letra aislada no se considera inválida, ya que puede ser
-    un código de sexo, actividad, prioridad u otra dimensión.
-    """
     normalized = normalize_context(term)
-
     if not normalized:
         return True
-
     return re.search(r"[a-z0-9]", normalized) is None
-
 
 def collect_term_evidence(
     table_vocabulary: pd.DataFrame,
 ) -> dict[str, dict[str, object]]:
-    """
-    Recoge evidencia estructural para cada término.
-
-    Distingue contextos exclusivos y contextos mezclados para evitar
-    que una única aparición ruidosa determine toda la clasificación.
-    """
     evidence: dict[str, dict[str, object]] = defaultdict(
         lambda: {
             "term": "",
@@ -396,7 +362,6 @@ def classify_one_term(
     normalized_term: str,
     evidence: dict[str, object],
 ) -> dict[str, object]:
-    """Clasifica un término mediante evidencia dominante."""
     term = str(evidence["term"])
 
     header_count = len(evidence["header_tables"])
@@ -441,18 +406,10 @@ def classify_one_term(
         generic_only_count,
     )
 
-    # ---------------------------------------------------------
-    # Texto inválido
-    # ---------------------------------------------------------
-
     if is_invalid_term(term):
         category = "other"
         confidence = "low"
         reason = "The term contains no usable alphanumeric content."
-
-    # ---------------------------------------------------------
-    # Nombre de dimensión
-    # ---------------------------------------------------------
 
     elif (
         header_count > 0
@@ -623,7 +580,6 @@ def classify_one_term(
 def classify_global_vocabulary(
     table_vocabulary: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Clasifica todos los términos del vocabulario global V."""
     evidence = collect_term_evidence(
         table_vocabulary
     )
@@ -691,7 +647,6 @@ def save_classification_results(
     summary: pd.DataFrame,
     output_directory: Path,
 ) -> None:
-    """Guarda los CSV correspondientes al paso 6."""
     output_directory.mkdir(
         parents=True,
         exist_ok=True,
@@ -729,7 +684,7 @@ def save_classification_results(
         )
 
     print(
-        "Clasificación completa guardada en: "
+        "Clasification saving in: "
         f"{output_directory / 'classification_all.csv'}"
     )
 

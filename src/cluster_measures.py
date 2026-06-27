@@ -709,7 +709,6 @@ DOMAIN_OVERRIDE_RULES = [
 
 
 def normalize_domain_text(value: object) -> str:
-    """Normaliza un texto para la comparación semántica."""
     text = unidecode(str(value))
     text = text.casefold()
     text = text.replace("&", " and ")
@@ -721,12 +720,6 @@ def normalize_domain_text(value: object) -> str:
 def apply_domain_override(
     normalized_text: str,
 ) -> tuple[str | None, list[str]]:
-    """
-    Aplica reglas de dominio de alta precisión.
-
-    Las reglas se evalúan en orden. El primer dominio que contiene
-    una expresión reconocible se utiliza como asignación.
-    """
     for domain, rules in DOMAIN_OVERRIDE_RULES:
         matches = [
             label
@@ -743,7 +736,6 @@ def keyword_is_present(
     normalized_text: str,
     keyword: str,
 ) -> bool:
-    """Comprueba si una palabra o expresión aparece en un texto."""
     normalized_keyword = normalize_domain_text(keyword)
 
     if not normalized_keyword:
@@ -759,7 +751,6 @@ def find_domain_keywords(
     normalized_text: str,
     profile: dict[str, object],
 ) -> tuple[list[str], list[str]]:
-    """Devuelve palabras clave normales y fuertes encontradas."""
     keyword_matches = [
         keyword
         for keyword in profile["keywords"]
@@ -785,7 +776,6 @@ def build_domain_prototype(
     domain: str,
     profile: dict[str, object],
 ) -> str:
-    """Crea el texto representativo de un dominio."""
     return " ".join(
         [
             domain,
@@ -801,7 +791,6 @@ def assign_confidence(
     margin: float,
     strong_match_count: int,
 ) -> str:
-    """Asigna una confianza interpretable."""
     if (
         score >= 0.55
         or (
@@ -820,17 +809,9 @@ def assign_confidence(
 def cluster_measures_by_domain(
     measures: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Agrupa las medidas mediante TF-IDF y perfiles de dominio.
-
-    La puntuación final combina:
-    - similitud TF-IDF;
-    - coincidencias de palabras clave;
-    - coincidencias de palabras clave fuertes.
-    """
     if measures.empty:
         raise ValueError(
-            "No hay medidas disponibles para agrupar."
+            "There are not metrics for group."
         )
 
     required_columns = {
@@ -846,7 +827,7 @@ def cluster_measures_by_domain(
 
     if missing_columns:
         raise ValueError(
-            "Faltan columnas en measures: "
+            "Colums are missing in measure: "
             + ", ".join(sorted(missing_columns))
         )
 
@@ -1213,7 +1194,6 @@ def save_domain_results(
     examples: pd.DataFrame,
     output_directory: Path,
 ) -> None:
-    """Guarda los resultados del paso 7."""
     output_directory.mkdir(
         parents=True,
         exist_ok=True,
@@ -1253,16 +1233,16 @@ def save_domain_results(
     )
 
     print(
-        "Asignación de dominios guardada en: "
+        "Domain assignment saved in: "
         f"{assignments_path}"
     )
 
     print(
-        "Resumen de dominios guardado en: "
+        "Domain summary saved in: "
         f"{summary_path}"
     )
 
     print(
-        "Ejemplos por dominio guardados en: "
+        "Domain examples saved in: "
         f"{examples_path}"
     )
