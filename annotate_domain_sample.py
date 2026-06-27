@@ -25,26 +25,23 @@ DOMAINS = {
 
 
 def print_domain_menu() -> None:
-    """Muestra los dominios disponibles."""
-    print()
-    print("Dominios:")
+    print("Available domains:")
 
     for number, domain in DOMAINS.items():
-        print(f"  {number:>2} = {domain}")
+        print(f"{number:>2} = {domain}")
 
     print()
-    print("Controles:")
-    print("  Intro = aceptar el dominio predicho")
-    print("  ?     = volver a mostrar los dominios")
-    print("  p     = volver a la fila anterior")
-    print("  q     = guardar y salir")
+    print("Controls:")
+    print("Enter = accept the predicted domain")
+    print("? = display the domain list")
+    print("p = return to the previous row")
+    print("q = save and exit")
 
 
 def save_progress(
     sample: pd.DataFrame,
     sample_path,
 ) -> None:
-    """Guarda el progreso de la anotación."""
     sample.to_csv(
         sample_path,
         index=False,
@@ -56,7 +53,6 @@ def update_correctness(
     sample: pd.DataFrame,
     row_index: int,
 ) -> None:
-    """Actualiza la columna is_correct."""
     predicted = str(
         sample.at[row_index, "predicted_domain"]
     ).strip()
@@ -81,8 +77,8 @@ def main() -> None:
 
     if not sample_path.exists():
         raise FileNotFoundError(
-            "No se encuentra evaluation/domain_gold_sample.csv. "
-            "Ejecuta primero python preparar_evaluacion_dominios.py."
+            "evaluation/domain_gold_sample.csv was not found. "
+            "Run python prepare_domain_evaluation.py first."
         )
 
     sample = pd.read_csv(
@@ -109,14 +105,12 @@ def main() -> None:
 
     if missing_columns:
         raise ValueError(
-            "Faltan columnas en domain_gold_sample.csv: "
+            "Missing columns in domain_gold_sample.csv: "
             + ", ".join(sorted(missing_columns))
         )
 
-    print("=" * 80)
-    print("ANOTACIÓN MANUAL DE DOMINIOS")
-    print("=" * 80)
-
+    print("Manual domain annotation")
+    print()
     print_domain_menu()
 
     annotated_mask = (
@@ -131,14 +125,12 @@ def main() -> None:
     )
 
     print(
-        f"\nProgreso existente: "
+        f"\nExisting progress: "
         f"{annotated_count}/{len(sample)}"
     )
 
     if annotated_count == len(sample):
-        print(
-            "La muestra ya está completamente anotada."
-        )
+        print("The sample is already fully annotated.")
         return
 
     unannotated_indices = sample.index[
@@ -150,30 +142,22 @@ def main() -> None:
     while 0 <= current_position < len(sample):
         row = sample.loc[current_position]
 
-        print()
-        print("=" * 80)
         print(
-            f"MUESTRA {row['sample_id']} "
-            f"DE {len(sample)}"
+            f"\nSample {row['sample_id']} "
+            f"of {len(sample)}"
         )
-        print("=" * 80)
-
-        print(f"Término: {row['term']}")
+        print(f"Term: {row['term']}")
         print(
-            f"Dominio predicho: "
+            f"Predicted domain: "
             f"{row['predicted_domain']}"
         )
         print(
-            f"Segundo dominio: "
+            f"Second domain: "
             f"{row['second_domain']}"
         )
-        print(
-            f"Confianza: {row['confidence']}"
-        )
-        print(
-            f"Puntuación: {row['domain_score']}"
-        )
-        print(f"Motivo: {row['reason']}")
+        print(f"Confidence: {row['confidence']}")
+        print(f"Score: {row['domain_score']}")
+        print(f"Reason: {row['reason']}")
 
         existing_gold = str(
             row["gold_domain"]
@@ -181,12 +165,12 @@ def main() -> None:
 
         if existing_gold:
             print(
-                f"Dominio manual actual: "
+                f"Current gold domain: "
                 f"{existing_gold}"
             )
 
         answer = input(
-            "\nDominio [1-17, Intro, ?, p, q]: "
+            "Domain [1-17, Enter, ?, p, q]: "
         ).strip().casefold()
 
         if answer == "q":
@@ -204,7 +188,7 @@ def main() -> None:
             )
 
             print(
-                f"\nProgreso guardado: "
+                f"Progress saved: "
                 f"{completed}/{len(sample)}"
             )
             return
@@ -217,9 +201,7 @@ def main() -> None:
             if current_position > 0:
                 current_position -= 1
             else:
-                print(
-                    "Ya estás en la primera fila."
-                )
+                print("This is the first row.")
 
             continue
 
@@ -233,8 +215,8 @@ def main() -> None:
 
         else:
             print(
-                "Opción no válida. Introduce un número "
-                "entre 1 y 17, Intro, ?, p o q."
+                "Invalid option. Enter a number from 1 to 17, "
+                "p, q, ?, or press Enter."
             )
             continue
 
@@ -263,18 +245,11 @@ def main() -> None:
         .sum()
     )
 
-    print()
-    print("=" * 80)
-    print("ANOTACIÓN DE DOMINIOS FINALIZADA")
-    print("=" * 80)
     print(
-        f"Filas anotadas: "
+        f"Annotation completed: "
         f"{completed}/{len(sample)}"
     )
-    print(
-        f"Archivo guardado en: "
-        f"{sample_path}"
-    )
+    print(f"Sample saved to: {sample_path}")
 
 
 if __name__ == "__main__":

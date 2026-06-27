@@ -1,84 +1,95 @@
-STAR Statistical Vocabularies — Full Execution Summary
+STAR Statistical Vocabularies — Full Run Summary
 
 Configuration
--------------
-Dataset mode: full
-Original tables: 7,605
-Excluded files: 1
-Excluded file: aact_ali01.csv
-Selected tables: 7,604
-Chunk size: 20,000 rows
 
-Step 1 — Temporal interval extraction
--------------------------------------
-Successfully processed tables: 7,604
-Tables with errors: 0
-Tables without detected dates: 31
-Extracted temporal intervals: 198,090
-Execution time: 00:05:09
+* Dataset mode: full
+* Input tables found: 7,605
+* Excluded file: aact_ali01.csv
+* Tables processed: 7,604
+* Chunk size: 20,000
 
-Step 2 — Table vocabulary extraction
--------------------------------------
-Successfully processed tables: 7,604
-Tables with errors: 0
-Distinct table-term pairs: 1,151,463
-Distinct terms in provisional vocabulary: 159,477
-Execution time: 00:46:36
+Step 1 — Time Extraction
 
-Step 3 — Geographical term identification
-------------------------------------------
-Geographical dictionary entries: 4,512
-Geographical table-term pairs: 413,625
-Distinct geographical terms: 3,558
-Remaining table-term pairs: 737,838
-Remaining distinct terms: 155,919
+* Successful tables: 7,604
+* Errors: 0
+* Tables without dates: 31
+* Extracted intervals: 198,090
+* Output directory: runs/full/intermediate/
 
-Steps 4 and 5 — Titles and global vocabulary
---------------------------------------------
-Associated titles: 7,604
-Tables without titles: 0
-Temporal expressions removed from titles: 1,284
-Geographical expressions removed from titles: 335
-Residual titles added: 7,604
-Final table-term pairs: 745,418
-Distinct terms in global vocabulary: 162,236
+Step 2 — Vocabulary Extraction
 
-Step 6 — Vocabulary classification
-----------------------------------
-Measures: 11,209
-Dimension names: 15,204
-Dimension values: 132,992
-Units: 2,830
-Other: 1
-Total classified terms: 162,236
+* Successful tables: 7,604
+* Errors: 0
+* Table-term pairs: 1,151,463
+* Global provisional terms: 159,477
+* Output directory: runs/full/intermediate/
 
-Step 7 — Measure-domain assignment
-----------------------------------
-Measures assigned: 11,209
-Domains used: 17
-High-confidence assignments: 5,851
-Medium-confidence assignments: 2,240
-Low-confidence assignments: 3,118
+Step 3 — Geography Extraction
 
-Vocabulary classification evaluation
-------------------------------------
-Evaluation sample: 81 terms
-Correct predictions: 70
-Incorrect predictions: 11
-Accuracy: 86.42%
+* Geography dictionary entries: 4,512
+* Geographical table-term pairs: 413,625
+* Distinct geographies: 3,558
+* Remaining table-term pairs: 737,838
+* Remaining global terms: 155,919
+* Output directory: runs/full/intermediate/
 
-Measure-domain evaluation
--------------------------
-Evaluation sample: 85 measures
-Correct predictions: 73
-Incorrect predictions: 12
-Accuracy: 85.88%
-Macro F1-score: 0.8459
-Weighted F1-score: 0.8717
+Steps 4 and 5 — Title Processing
 
-Consistency checks
-------------------
-11,209 + 15,204 + 132,992 + 2,830 + 1 = 162,236
-1,151,463 - 413,625 = 737,838
-159,477 - 3,558 = 155,919
-Total measures classified by domain = 11,209
+* Available titles processed: 7,678
+* Matched table titles: 7,604
+* Missing titles: 0
+* Dates extracted from titles: 1,284
+* Geographies extracted from titles: 335
+* Residual titles: 7,604
+* Final table-term pairs: 745,418
+* Final global terms: 162,236
+* Output directory: runs/full/intermediate/
+
+Step 6 — Term Classification
+
+* Measures: 11,209
+* Dimension names: 15,204
+* Dimension values: 132,992
+* Units: 2,830
+* Other: 1
+* Total classified terms: 162,236
+* Output directory: runs/full/outputs/
+
+Step 7 — Measure Domain Assignment
+
+* Measures assigned: 11,209
+* Domains: 17
+* High-confidence assignments: 5,851
+* Medium-confidence assignments: 2,240
+* Low-confidence assignments: 3,118
+* Output directory: runs/full/outputs/
+
+Classification Evaluation
+
+* Evaluated terms: 81
+* Correct predictions: 70
+* Incorrect predictions: 11
+* Accuracy: 0.8642
+
+Per-category results:
+
+* measure: precision 1.0000, recall 0.8000, F1 0.8889, support 25
+* dimension_name: precision 1.0000, recall 1.0000, F1 1.0000, support 20
+* dimension_value: precision 0.8000, recall 0.8000, F1 0.8000, support 20
+* unit: precision 0.6500, recall 1.0000, F1 0.7879, support 13
+* other: precision 1.0000, recall 0.3333, F1 0.5000, support 3
+
+Domain Evaluation
+
+* Evaluated terms: 85
+* Correct predictions: 73
+* Incorrect predictions: 12
+* Accuracy: 0.8588
+* Macro F1: 0.8459
+* Weighted F1: 0.8717
+
+Final Status
+
+* Pipeline completed successfully.
+* All 7,604 selected tables were processed.
+* No processing errors were reported.

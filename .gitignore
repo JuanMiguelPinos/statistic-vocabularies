@@ -1,64 +1,60 @@
-﻿# Python cache and compiled files
+﻿gitignore
+
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environments
 .env
 .env.*
+!.env.example
 .venv/
 venv/
 env/
 ENV/
 star_vocab/
 
-# IDE and editor files
 .vscode/
 .idea/
 .spyproject/
 *.sublime-project
 *.sublime-workspace
 
-# Operating-system files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Jupyter
 .ipynb_checkpoints/
 *.nbconvert.ipynb
 
-# Tests and coverage
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
 .coverage.*
 htmlcov/
 .tox/
 .nox/
 
-# Build and packaging
 build/
 dist/
 *.egg-info/
 .eggs/
 
-# Logs
 *.log
 runs/*/logs/*
 !runs/full/logs/
 !runs/full/logs/full_run_summary.txt
 
-# Raw datasets
 data/raw/
-data/external/nuts/*.xlsx
+data/external/
 
-# Large generated data
 data/intermediate/
 data/processed/
 runs/*/intermediate/
 runs/*/processed/
 
-# Compressed archives
+backup_final_results/
+
 *.tgz
 *.tar
 *.tar.gz
@@ -67,7 +63,6 @@ runs/*/processed/
 *.7z
 *.rar
 
-# Temporary files
 *.tmp
 *.temp
 *.bak
@@ -75,17 +70,13 @@ runs/*/processed/
 *.swo
 ~$*
 .cache/
-
-# Local configuration overrides
-config/config.local.yaml
-config/config_private.yaml
-
-# Debugging outputs
 debug/
 tmp/
 temp/
 
-# LaTeX auxiliary files
+config/config.local.yaml
+config/config_private.yaml
+
 *.aux
 *.bbl
 *.bcf

@@ -1,10 +1,10 @@
 import re
 from collections.abc import Iterable
 from pathlib import Path
-from unidecode import unidecode
 
 import pandas as pd
 from tqdm import tqdm
+from unidecode import unidecode
 
 from src.io_utils import read_csv_flexible
 
@@ -52,7 +52,6 @@ FULL_DATE_PATTERN = re.compile(
 )
 
 MONTH_NAMES = {
-    # Inglés
     "january": "01",
     "february": "02",
     "march": "03",
@@ -65,8 +64,6 @@ MONTH_NAMES = {
     "october": "10",
     "november": "11",
     "december": "12",
-
-    # Francés normalizado sin tildes
     "janvier": "01",
     "fevrier": "02",
     "mars": "03",
@@ -82,23 +79,16 @@ MONTH_NAMES = {
 }
 
 NAMED_PERIODS = {
-    # Trimestres en inglés
     ("january", "march"): "Q1",
     ("april", "june"): "Q2",
     ("july", "september"): "Q3",
     ("october", "december"): "Q4",
-
-    # Trimestres en francés
     ("janvier", "mars"): "Q1",
     ("avril", "juin"): "Q2",
     ("juillet", "septembre"): "Q3",
     ("octobre", "decembre"): "Q4",
-
-    # Semestres en inglés
     ("january", "june"): "H1",
     ("july", "december"): "H2",
-
-    # Semestres en francés
     ("janvier", "juin"): "H1",
     ("juillet", "decembre"): "H2",
 }
@@ -113,8 +103,8 @@ NAMED_PERIOD_PATTERN = re.compile(
     r"(?P<year>19\d{2}|20\d{2}|2100)$"
 )
 
+
 def clean_header_value(value: object) -> str:
-    """Convierte una cabecera en una cadena limpia."""
     text = str(value).strip()
 
     if text.lower().startswith("unnamed:"):
@@ -122,22 +112,8 @@ def clean_header_value(value: object) -> str:
 
     return text
 
-def extract_time_interval(value: object) -> str | None:
-    """
-    Detecta y normaliza un intervalo temporal.
 
-    Ejemplos:
-        2024.0              -> 2024
-        2024-Q1             -> 2024-Q1
-        Q2 2023             -> 2023-Q2
-        2024M03             -> 2024-M03
-        2024-03             -> 2024-03
-        2024-03-15          -> 2024-03-15
-        2010-2020           -> 2010-2020
-        Janvier 2024        -> 2024-01
-        Janvier-Mars 2024   -> 2024-Q1
-        Janvier-Juin 2024   -> 2024-H1
-    """
+def extract_time_interval(value: object) -> str | None:
     text = clean_header_value(value)
 
     if not text:
@@ -203,11 +179,8 @@ def extract_time_interval(value: object) -> str | None:
             f"{match.group('month')}"
         )
 
-    # Normaliza las tildes y pasa el texto a minúsculas.
     normalized_text = unidecode(text).lower().strip()
 
-    # Detecta periodos escritos con nombres de meses:
-    # Janvier-Mars, Janvier-Juin, Juillet-Décembre, etc.
     match = NAMED_PERIOD_PATTERN.fullmatch(normalized_text)
 
     if match:
@@ -221,8 +194,6 @@ def extract_time_interval(value: object) -> str | None:
         if period:
             return f"{match.group('year')}-{period}"
 
-    # Detecta meses individuales:
-    # Janvier 2024, Février 2024, etc.
     match = MONTH_NAME_PATTERN.fullmatch(normalized_text)
 
     if match:
@@ -234,14 +205,10 @@ def extract_time_interval(value: object) -> str | None:
 
     return None
 
+
 def extract_time_intervals_from_columns(
     columns: Iterable[object],
 ) -> list[str]:
-    """
-    Construye D(t) a partir de las cabeceras de una tabla.
-
-    El resultado no contiene duplicados y conserva el orden.
-    """
     intervals: list[str] = []
     seen: set[str] = set()
 
@@ -258,20 +225,13 @@ def extract_time_intervals_from_columns(
 def build_table_time_vocabulary(
     table_files: list[Path],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Extrae D(t) para todas las tablas.
-
-    Devuelve:
-        1. Una fila por tabla e intervalo temporal.
-        2. Un resumen con el número de fechas por tabla.
-    """
     interval_records: list[dict[str, object]] = []
     summary_records: list[dict[str, object]] = []
 
     for table_path in tqdm(
         table_files,
-        desc="Extrayendo fechas",
-        unit="tabla",
+        desc="Extracting dates",
+        unit="table",
     ):
         try:
             dataframe = read_csv_flexible(
@@ -338,7 +298,6 @@ def save_time_results(
     summary: pd.DataFrame,
     output_directory: Path,
 ) -> None:
-    """Guarda los resultados del paso 1."""
     output_directory.mkdir(
         parents=True,
         exist_ok=True,
@@ -359,5 +318,4 @@ def save_time_results(
         encoding="utf-8",
     )
 
-    print(f"Fechas guardadas en: {intervals_path}")
-    print(f"Resumen guardado en: {summary_path}")
+    print(f"Time extraction results saved to: {output_directory}")

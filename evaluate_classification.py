@@ -15,7 +15,6 @@ def save_confusion_matrix_figure(
     confusion: pd.DataFrame,
     output_path: Path,
 ) -> None:
-    """Guarda una representación gráfica de la matriz de confusión."""
     output_path.parent.mkdir(
         parents=True,
         exist_ok=True,
@@ -97,7 +96,6 @@ def save_confusion_matrix_figure(
 def update_sample_correctness(
     sample: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Actualiza la columna is_correct a partir de la anotación."""
     updated = sample.copy()
 
     predicted = (
@@ -146,7 +144,7 @@ def main() -> None:
 
     if not sample_path.exists():
         raise FileNotFoundError(
-            "No se encuentra evaluation/gold_sample.csv."
+            "evaluation/gold_sample.csv was not found."
         )
 
     sample = pd.read_csv(
@@ -163,7 +161,7 @@ def main() -> None:
 
     if not missing_annotations.empty:
         raise ValueError(
-            "Todavía existen términos sin anotar: "
+            "Unannotated terms remain: "
             f"{len(missing_annotations)}"
         )
 
@@ -186,7 +184,7 @@ def main() -> None:
         )
 
         raise ValueError(
-            "Se encontraron categorías manuales no válidas: "
+            "Invalid gold categories were found: "
             f"{invalid_values}"
         )
 
@@ -220,35 +218,14 @@ def main() -> None:
         output_path=figure_path,
     )
 
-    print("=" * 80)
-    print("EVALUACIÓN DEL PASO 6")
-    print("=" * 80)
-
-    print()
-    print("Métricas generales:")
     print(
-        f"  Términos evaluados: "
-        f"{metrics['evaluated_terms']}"
-    )
-    print(
-        f"  Clasificaciones correctas: "
-        f"{metrics['correct_terms']}"
-    )
-    print(
-        f"  Clasificaciones incorrectas: "
-        f"{metrics['incorrect_terms']}"
-    )
-    print(
-        f"  Accuracy: "
-        f"{metrics['accuracy']:.4f}"
-    )
-    print(
-        f"  Accuracy porcentual: "
-        f"{metrics['accuracy'] * 100:.2f}%"
+        "Classification evaluation completed | "
+        f"Evaluated terms: {metrics['evaluated_terms']} | "
+        f"Correct: {metrics['correct_terms']} | "
+        f"Incorrect: {metrics['incorrect_terms']} | "
+        f"Accuracy: {metrics['accuracy']:.4f}"
     )
 
-    print()
-    print("Resultados por categoría:")
     print(
         report.to_string(
             index=False,
@@ -256,27 +233,7 @@ def main() -> None:
         )
     )
 
-    print()
-    print("Matriz de confusión:")
-    print(
-        confusion.to_string()
-    )
-
-    print()
-    print("Archivos generados:")
-
-    generated_files = [
-        output_directory
-        / "classification_metrics.csv",
-        output_directory
-        / "classification_report.csv",
-        output_directory
-        / "classification_confusion_matrix.csv",
-        figure_path,
-    ]
-
-    for path in generated_files:
-        print(f"  - {path}")
+    print(f"Results saved to: {output_directory}")
 
 
 if __name__ == "__main__":

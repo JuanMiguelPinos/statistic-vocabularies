@@ -1,8 +1,7 @@
-from pathlib import Path
-from typing import Any, Iterable
-
 import csv
 import sys
+from pathlib import Path
+from typing import Any, Iterable
 
 import pandas as pd
 
@@ -23,13 +22,8 @@ CSV_SEPARATORS = (
     None,
 )
 
-def configure_csv_field_size_limit() -> None:
-    """
-    Amplía el tamaño máximo de campo admitido por el lector CSV.
 
-    En Windows, sys.maxsize puede superar el límite del tipo C long,
-    por lo que se reduce progresivamente si produce OverflowError.
-    """
+def configure_csv_field_size_limit() -> None:
     limit = sys.maxsize
 
     while limit > 0:
@@ -44,7 +38,7 @@ configure_csv_field_size_limit()
 
 
 class DataReadingError(RuntimeError):
-    """Error producido al leer uno de los recursos del proyecto."""
+    pass
 
 
 def list_files(
@@ -52,9 +46,6 @@ def list_files(
     extensions: Iterable[str],
     recursive: bool = True,
 ) -> list[Path]:
-    """
-    Devuelve los archivos de una carpeta con las extensiones indicadas.
-    """
     normalized_extensions = {
         extension.lower()
         if extension.startswith(".")
@@ -62,12 +53,17 @@ def list_files(
         for extension in extensions
     }
 
-    iterator = directory.rglob("*") if recursive else directory.glob("*")
+    iterator = (
+        directory.rglob("*")
+        if recursive
+        else directory.glob("*")
+    )
 
     files = [
         path
         for path in iterator
-        if path.is_file() and path.suffix.lower() in normalized_extensions
+        if path.is_file()
+        and path.suffix.lower() in normalized_extensions
     ]
 
     return sorted(files)
@@ -77,7 +73,6 @@ def list_csv_files(
     directory: Path,
     recursive: bool = True,
 ) -> list[Path]:
-    """Devuelve todos los CSV encontrados en una carpeta."""
     return list_files(
         directory=directory,
         extensions={".csv"},
@@ -89,11 +84,6 @@ def find_single_file(
     directory: Path,
     extensions: Iterable[str],
 ) -> Path:
-    """
-    Encuentra un único archivo dentro de una carpeta.
-
-    Se utiliza para localizar el CSV de títulos y el Excel de NUTS.
-    """
     files = list_files(
         directory=directory,
         extensions=extensions,
@@ -102,26 +92,26 @@ def find_single_file(
 
     if not files:
         extensions_text = ", ".join(extensions)
+
         raise FileNotFoundError(
-            f"No se encontraron archivos {extensions_text} en {directory}"
+            f"No {extensions_text} files were found in {directory}"
         )
 
     if len(files) > 1:
-        names = "\n".join(f"  - {path.name}" for path in files)
+        names = "\n".join(
+            f"  - {path.name}"
+            for path in files
+        )
 
         raise DataReadingError(
-            f"Se esperaba un único archivo en {directory}, "
-            f"pero se encontraron {len(files)}:\n{names}"
+            f"Expected one file in {directory}, "
+            f"but found {len(files)}:\n{names}"
         )
 
     return files[0]
 
-def detect_compression(path: Path) -> str | None:
-    """
-    Detecta si un archivo está comprimido como GZIP aunque termine en .csv.
 
-    Los archivos GZIP empiezan por los bytes 1F 8B.
-    """
+def detect_compression(path: Path) -> str | None:
     try:
         with path.open("rb") as file:
             magic_bytes = file.read(2)
@@ -133,7 +123,7 @@ def detect_compression(path: Path) -> str | None:
 
     except OSError as exc:
         raise DataReadingError(
-            f"No se pudo inspeccionar el archivo: {path}"
+            f"Could not inspect file: {path}"
         ) from exc
 
 
@@ -141,15 +131,6 @@ def read_csv_flexible(
     path: Path,
     **read_kwargs: Any,
 ) -> Any:
-    """
-    Lee un CSV probando distintas codificaciones y separadores.
-
-    Admite todos los argumentos habituales de pandas.read_csv,
-    incluyendo nrows, usecols, chunksize, dtype y keep_default_na.
-
-    Cuando se solicita chunksize, devuelve un TextFileReader que
-    permite procesar el archivo por bloques.
-    """
     errors: list[str] = []
     compression = detect_compression(path)
 
@@ -157,8 +138,6 @@ def read_csv_flexible(
         tuple[int, str, str | None, str]
     ] = []
 
-    # Primero se hace una lectura pequeña para identificar
-    # la combinación correcta de codificación y separador.
     for encoding in CSV_ENCODINGS:
         for separator in CSV_SEPARATORS:
             engine = (
@@ -169,7 +148,6 @@ def read_csv_flexible(
 
             probe_options = dict(read_kwargs)
 
-            # El sondeo no debe devolver bloques.
             probe_options.pop(
                 "chunksize",
                 None,
@@ -179,14 +157,12 @@ def read_csv_flexible(
                 "iterator",
                 None,
             )
-            
+
             probe_options.pop(
                 "usecols",
                 None,
             )
 
-            # Siempre se leen unas pocas filas para detectar
-            # correctamente las columnas.
             probe_options["nrows"] = 5
 
             probe_options.setdefault(
@@ -231,7 +207,7 @@ def read_csv_flexible(
 
             except Exception as exc:
                 separator_name = (
-                    "automático"
+                    "automatic"
                     if separator is None
                     else repr(separator)
                 )
@@ -248,13 +224,11 @@ def read_csv_flexible(
         )
 
         raise DataReadingError(
-            f"No se pudo detectar el formato del CSV:\n"
+            f"Could not detect CSV format:\n"
             f"{path}\n"
-            f"Últimos intentos:\n{attempts}"
+            f"Last attempts:\n{attempts}"
         )
 
-    # Se prueban primero las combinaciones que detectaron
-    # un mayor número de columnas.
     candidates.sort(
         key=lambda item: item[0],
         reverse=True,
@@ -287,9 +261,6 @@ def read_csv_flexible(
             "skip",
         )
 
-        # El motor C es más rápido, pero puede fallar con líneas
-        # extremadamente largas. Para lectura por bloques se usa
-        # siempre el motor Python.
         selected_engine = (
             "python"
             if chunked_read
@@ -319,7 +290,7 @@ def read_csv_flexible(
 
         except Exception as exc:
             separator_name = (
-                "automático"
+                "automatic"
                 if separator is None
                 else repr(separator)
             )
@@ -336,13 +307,13 @@ def read_csv_flexible(
     )
 
     raise DataReadingError(
-        f"No se pudo leer el CSV:\n{path}\n"
-        f"Últimos intentos:\n{attempts}"
+        f"Could not read CSV file:\n"
+        f"{path}\n"
+        f"Last attempts:\n{attempts}"
     )
 
 
 def read_titles_file(path: Path) -> pd.DataFrame:
-    """Lee el archivo que relaciona tablas y títulos."""
     dataframe = read_csv_flexible(path)
 
     dataframe.columns = [
@@ -354,13 +325,13 @@ def read_titles_file(path: Path) -> pd.DataFrame:
 
 
 def get_excel_sheet_names(path: Path) -> list[str]:
-    """Devuelve los nombres de las hojas de un archivo Excel."""
     try:
         excel_file = pd.ExcelFile(path)
         return excel_file.sheet_names
+
     except Exception as exc:
         raise DataReadingError(
-            f"No se pudieron leer las hojas del Excel NUTS: {path}"
+            f"Could not read Excel sheet names: {path}"
         ) from exc
 
 
@@ -369,7 +340,6 @@ def read_excel_sheet(
     sheet_name: str | int = 0,
     nrows: int | None = None,
 ) -> pd.DataFrame:
-    """Lee una hoja de un archivo Excel."""
     try:
         return pd.read_excel(
             path,
@@ -378,9 +348,10 @@ def read_excel_sheet(
             dtype=str,
             keep_default_na=False,
         )
+
     except Exception as exc:
         raise DataReadingError(
-            f"No se pudo leer la hoja {sheet_name!r} de {path}"
+            f"Could not read sheet {sheet_name!r} from {path}"
         ) from exc
 
 
@@ -388,9 +359,8 @@ def print_dataframe_preview(
     dataframe: pd.DataFrame,
     rows: int = 5,
 ) -> None:
-    """Imprime una vista previa legible de un DataFrame."""
     if dataframe.empty:
-        print("[DataFrame vacío]")
+        print("[Empty DataFrame]")
         return
 
     with pd.option_context(
@@ -401,95 +371,86 @@ def print_dataframe_preview(
         "display.max_colwidth",
         50,
     ):
-        print(dataframe.head(rows).to_string(index=False))
+        print(
+            dataframe.head(rows).to_string(
+                index=False
+            )
+        )
 
 
 def inspect_input_data(
     paths: ProjectPaths,
     number_of_table_samples: int = 3,
 ) -> None:
-    """
-    Inspecciona los tres recursos principales antes de implementar
-    la extracción definitiva.
-    """
-    print("=" * 80)
-    print("1. TABLAS EUROSTAT")
-    print("=" * 80)
-
-    table_files = list_csv_files(paths.tables_small)
-
-    print(f"Carpeta: {paths.tables_small}")
-    print(f"Número de tablas encontradas: {len(table_files)}")
+    table_files = list_csv_files(
+        paths.tables_small
+    )
 
     if not table_files:
         raise FileNotFoundError(
-            f"No se encontraron tablas CSV en {paths.tables_small}"
+            f"No CSV tables were found in {paths.tables_small}"
         )
 
-    for index, table_path in enumerate(
-        table_files[:number_of_table_samples],
-        start=1,
-    ):
-        print()
-        print(f"Tabla de muestra {index}: {table_path.name}")
+    print(
+        f"Eurostat tables: {len(table_files)} "
+        f"files in {paths.tables_small}"
+    )
 
+    for table_path in table_files[
+        :number_of_table_samples
+    ]:
         table = read_csv_flexible(
             table_path,
             nrows=5,
         )
 
-        print(f"Dimensiones de la muestra: {table.shape}")
-        print(f"Columnas detectadas: {list(table.columns)}")
-        print_dataframe_preview(table)
+        print(
+            f"\nTable: {table_path.name} "
+            f"shape={table.shape}"
+        )
 
-    print()
-    print("=" * 80)
-    print("2. ARCHIVO DE TÍTULOS")
-    print("=" * 80)
+        print_dataframe_preview(table)
 
     titles_path = find_single_file(
         paths.titles,
         extensions={".csv"},
     )
 
-    print(f"Archivo: {titles_path}")
+    titles = read_titles_file(
+        titles_path
+    )
 
-    titles = read_titles_file(titles_path)
+    print(
+        f"\nTitles file: {titles_path} "
+        f"shape={titles.shape}"
+    )
 
-    print(f"Dimensiones: {titles.shape}")
-    print(f"Columnas: {list(titles.columns)}")
     print_dataframe_preview(titles)
-
-    print()
-    print("=" * 80)
-    print("3. DICCIONARIO NUTS")
-    print("=" * 80)
 
     nuts_path = find_single_file(
         paths.nuts,
         extensions={".xlsx", ".xls"},
     )
 
-    print(f"Archivo: {nuts_path}")
+    sheet_names = get_excel_sheet_names(
+        nuts_path
+    )
 
-    sheet_names = get_excel_sheet_names(nuts_path)
-
-    print(f"Hojas encontradas: {sheet_names}")
+    print(
+        f"\nNUTS file: {nuts_path} "
+        f"sheets={len(sheet_names)}"
+    )
 
     for sheet_name in sheet_names:
-        print()
-        print(f"Hoja: {sheet_name}")
-
         preview = read_excel_sheet(
             nuts_path,
             sheet_name=sheet_name,
             nrows=5,
         )
 
-        print(f"Columnas: {list(preview.columns)}")
-        print_dataframe_preview(preview)
+        print(
+            f"\nSheet: {sheet_name} "
+            f"shape={preview.shape}"
+        )
 
-    print()
-    print("=" * 80)
-    print("INSPECCIÓN FINALIZADA CORRECTAMENTE")
-    print("=" * 80)
+        print_dataframe_preview(preview)

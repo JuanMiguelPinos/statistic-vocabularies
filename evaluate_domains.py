@@ -50,7 +50,7 @@ def main() -> None:
 
     if not missing.empty:
         raise ValueError(
-            f"Quedan {len(missing)} términos sin anotar."
+            f"{len(missing)} terms remain unannotated."
         )
 
     invalid = sample[
@@ -58,15 +58,15 @@ def main() -> None:
     ]
 
     if not invalid.empty:
+        invalid_domains = sorted(
+            invalid["gold_domain"]
+            .unique()
+            .tolist()
+        )
+
         raise ValueError(
-            "Hay dominios manuales no válidos: "
-            + str(
-                sorted(
-                    invalid["gold_domain"]
-                    .unique()
-                    .tolist()
-                )
-            )
+            "Invalid gold domains were found: "
+            f"{invalid_domains}"
         )
 
     y_true = sample["gold_domain"]
@@ -183,8 +183,7 @@ def main() -> None:
     )
 
     overall_metrics.to_csv(
-        output_directory
-        / "domain_metrics.csv",
+        output_directory / "domain_metrics.csv",
         index=False,
         encoding="utf-8",
     )
@@ -264,40 +263,25 @@ def main() -> None:
 
     plt.close(figure)
 
-    print("=" * 80)
-    print("EVALUACIÓN DEL PASO 7")
-    print("=" * 80)
-
-    print()
-    print(f"Términos evaluados: {len(sample)}")
-    print(
-        "Clasificaciones correctas: "
-        f"{int((y_true == y_pred).sum())}"
-    )
-    print(
-        "Clasificaciones incorrectas: "
-        f"{int((y_true != y_pred).sum())}"
-    )
-    print(f"Accuracy: {accuracy:.4f}")
-    print(f"Accuracy porcentual: {accuracy * 100:.2f}%")
-    print(f"Macro F1: {macro_f1:.4f}")
-    print(f"Weighted F1: {weighted_f1:.4f}")
-
-    print()
-    print("Resultados por dominio:")
-    print(
-        report.to_string(
-            index=False,
-            float_format=lambda value: f"{value:.4f}",
-        )
+    correct_terms = int(
+        (y_true == y_pred).sum()
     )
 
-    print()
-    print("Archivos generados:")
-    print("  evaluation/domain_metrics.csv")
-    print("  evaluation/domain_classification_report.csv")
-    print("  evaluation/domain_confusion_matrix.csv")
-    print("  evaluation/figures/domain_confusion_matrix.png")
+    incorrect_terms = int(
+        (y_true != y_pred).sum()
+    )
+
+    print(
+        "Domain evaluation completed | "
+        f"Evaluated terms: {len(sample)} | "
+        f"Correct: {correct_terms} | "
+        f"Incorrect: {incorrect_terms} | "
+        f"Accuracy: {accuracy:.4f} | "
+        f"Macro F1: {macro_f1:.4f} | "
+        f"Weighted F1: {weighted_f1:.4f}"
+    )
+
+    print(f"Results saved to: {output_directory}")
 
 
 if __name__ == "__main__":

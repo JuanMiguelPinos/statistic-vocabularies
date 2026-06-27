@@ -1,8 +1,10 @@
-from pathlib import Path
-
 import pandas as pd
 
-from src.config import PROJECT_ROOT
+from src.config import (
+    PROJECT_ROOT,
+    get_project_paths,
+    load_config,
+)
 from src.evaluate import (
     create_stratified_gold_sample,
     print_category_examples,
@@ -12,16 +14,18 @@ from src.evaluate import (
 
 
 def main() -> None:
+    config = load_config()
+    paths = get_project_paths(config)
+
     classification_path = (
-        PROJECT_ROOT
-        / "outputs"
+        paths.outputs
         / "classification_all.csv"
     )
 
     if not classification_path.exists():
         raise FileNotFoundError(
-            "No se encuentra classification_all.csv. "
-            "Ejecuta primero python main.py."
+            f"Classification file not found: {classification_path}. "
+            "Run python main.py first."
         )
 
     classification = pd.read_csv(

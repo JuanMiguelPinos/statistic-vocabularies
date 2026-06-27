@@ -50,7 +50,7 @@ def create_stratified_gold_sample(
         )
 
         raise ValueError(
-            "Columns are missing in classification_all.csv: "
+            "Missing columns in classification_all.csv: "
             f"{missing_text}"
         )
 
@@ -202,54 +202,38 @@ def save_gold_sample(
         encoding="utf-8-sig",
     )
 
-    print(
-        "Muestra de evaluación guardada en: "
-        f"{output_path}"
-    )
+    print(f"Evaluation sample saved to: {output_path}")
 
 
 def print_sample_summary(
     sample: pd.DataFrame,
 ) -> None:
-    """Muestra el reparto de la muestra por categoría."""
-    print()
-    print("Distribución de la muestra:")
-
     counts = (
         sample["predicted_category"]
         .value_counts()
     )
 
+    print("Sample distribution:")
+
     for category in VALID_CATEGORIES:
         print(
-            f"  {category}: "
+            f"{category}: "
             f"{int(counts.get(category, 0))}"
         )
 
-    print(
-        f"  Total: {len(sample)}"
-    )
+    print(f"Total: {len(sample)}")
 
 
 def print_category_examples(
     sample: pd.DataFrame,
     examples_per_category: int = 5,
 ) -> None:
-    """Imprime algunos ejemplos para una primera inspección."""
     for category in VALID_CATEGORIES:
         category_sample = sample[
             sample["predicted_category"] == category
         ]
 
-        print()
-        print("=" * 80)
-        print(
-            f"EJEMPLOS PREDICHOS COMO: {category}"
-        )
-        print("=" * 80)
-
         if category_sample.empty:
-            print("[Sin ejemplos]")
             continue
 
         columns = [
@@ -259,6 +243,7 @@ def print_category_examples(
             "columns",
         ]
 
+        print(f"\nPredicted category: {category}")
         print(
             category_sample[
                 columns
@@ -275,14 +260,6 @@ def evaluate_annotated_sample(
     pd.DataFrame,
     pd.DataFrame,
 ]:
-    """
-    Evalúa la muestra después de rellenar gold_category.
-
-    Devuelve:
-    - métricas generales;
-    - informe por categoría;
-    - matriz de confusión.
-    """
     evaluated = sample.copy()
 
     evaluated["gold_category"] = (
@@ -309,7 +286,7 @@ def evaluate_annotated_sample(
 
     if evaluated.empty:
         raise ValueError(
-            "No hay filas anotadas en gold_category."
+            "No annotated rows were found in gold_category."
         )
 
     y_true = evaluated["gold_category"]
@@ -393,7 +370,6 @@ def save_evaluation_results(
     confusion: pd.DataFrame,
     output_directory: Path,
 ) -> None:
-    """Guarda los resultados cuantitativos de la evaluación."""
     output_directory.mkdir(
         parents=True,
         exist_ok=True,

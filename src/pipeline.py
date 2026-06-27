@@ -1,4 +1,12 @@
-﻿from src.config import (
+﻿from src.classify_terms import (
+    classify_global_vocabulary,
+    save_classification_results,
+)
+from src.cluster_measures import (
+    cluster_measures_by_domain,
+    save_domain_results,
+)
+from src.config import (
     ensure_output_directories,
     get_project_paths,
     load_config,
@@ -19,7 +27,6 @@ from src.extract_vocabulary import (
     build_table_string_vocabulary,
     save_vocabulary_results,
 )
-
 from src.io_utils import (
     find_single_file,
     list_csv_files,
@@ -31,22 +38,8 @@ from src.process_titles import (
     save_title_results,
 )
 
-from src.classify_terms import (
-    classify_global_vocabulary,
-    save_classification_results,
-)
-
-from src.cluster_measures import (
-    cluster_measures_by_domain,
-    save_domain_results,
-)
 
 def run_pipeline() -> None:
-    """Ejecuta los pasos implementados del proyecto."""
-    print("=" * 80)
-    print("STAR STATISTICAL VOCABULARIES")
-    print("=" * 80)
-
     config = load_config()
     paths = get_project_paths(config)
 
@@ -62,10 +55,6 @@ def run_pipeline() -> None:
         )
     )
 
-    print(
-        f"Tamaño de bloque: {chunk_size:,} filas"
-    )
-
     ensure_output_directories(paths)
 
     dataset_mode = str(
@@ -78,7 +67,7 @@ def run_pipeline() -> None:
         tables_directory = paths.tables_full
     else:
         raise ValueError(
-            "dataset_mode debe ser 'small' o 'full'."
+            "dataset_mode must be 'small' or 'full'."
         )
 
     table_files = list_csv_files(
@@ -102,7 +91,7 @@ def run_pipeline() -> None:
         ]
 
         print(
-            "Archivos excluidos: "
+            "Excluded files: "
             + ", ".join(sorted(excluded_files))
         )
 
@@ -115,39 +104,30 @@ def run_pipeline() -> None:
 
         if sample_limit <= 0:
             raise ValueError(
-                "processing.sample_limit debe ser "
-                "mayor que cero o null."
+                "processing.sample_limit must be "
+                "greater than zero or null."
             )
 
-        # Para la prueba se seleccionan los archivos
-        # más pequeños del conjunto completo.
         table_files = sorted(
             table_files,
             key=lambda path: path.stat().st_size,
         )[:sample_limit]
 
         print(
-            "Ejecución limitada a las "
-            f"{sample_limit} tablas más pequeñas."
+            f"Execution limited to the {sample_limit} "
+            "smallest tables."
         )
-
-    print(f"Modo del dataset: {dataset_mode}")
-    print(f"Directorio de tablas: {tables_directory}")
-    print(f"Tablas encontradas: {len(table_files)}")
 
     if not table_files:
         raise FileNotFoundError(
-            f"No se encontraron tablas en {tables_directory}"
+            f"No tables were found in {tables_directory}"
         )
 
-    # ============================================================
-    # PASO 1
-    # ============================================================
-
-    print()
-    print("=" * 80)
-    print("PASO 1: EXTRACCIÓN DE INTERVALOS TEMPORALES D(t)")
-    print("=" * 80)
+    print(
+        f"Dataset mode: {dataset_mode} | "
+        f"Tables: {len(table_files)} | "
+        f"Chunk size: {chunk_size:,}"
+    )
 
     intervals, time_summary = build_table_time_vocabulary(
         table_files
@@ -159,30 +139,16 @@ def run_pipeline() -> None:
         output_directory=paths.intermediate,
     )
 
-    print()
-    print("Resultado del paso 1:")
     print(
-        "  Tablas procesadas correctamente: "
-        f"{int((time_summary['status'] == 'ok').sum())}"
+        "Step 1 completed | "
+        f"Successful tables: "
+        f"{int((time_summary['status'] == 'ok').sum())} | "
+        f"Errors: "
+        f"{int((time_summary['status'] == 'error').sum())} | "
+        f"Tables without dates: "
+        f"{int((time_summary['time_interval_count'] == 0).sum())} | "
+        f"Intervals: {len(intervals)}"
     )
-    print(
-        "  Tablas con error: "
-        f"{int((time_summary['status'] == 'error').sum())}"
-    )
-    print(
-        "  Tablas sin fechas detectadas: "
-        f"{int((time_summary['time_interval_count'] == 0).sum())}"
-    )
-    print(f"  Intervalos extraídos: {len(intervals)}")
-
-    # ============================================================
-    # PASO 2
-    # ============================================================
-
-    print()
-    print("=" * 80)
-    print("PASO 2: EXTRACCIÓN DEL VOCABULARIO S(t)")
-    print("=" * 80)
 
     table_vocabulary, vocabulary_summary = (
         build_table_string_vocabulary(
@@ -202,33 +168,15 @@ def run_pipeline() -> None:
         output_directory=paths.intermediate,
     )
 
-    print()
-    print("Resultado del paso 2:")
     print(
-        "  Tablas procesadas correctamente: "
-        f"{int((vocabulary_summary['status'] == 'ok').sum())}"
+        "Step 2 completed | "
+        f"Successful tables: "
+        f"{int((vocabulary_summary['status'] == 'ok').sum())} | "
+        f"Errors: "
+        f"{int((vocabulary_summary['status'] == 'error').sum())} | "
+        f"Table-term pairs: {len(table_vocabulary)} | "
+        f"Global terms: {len(global_vocabulary)}"
     )
-    print(
-        "  Tablas con error: "
-        f"{int((vocabulary_summary['status'] == 'error').sum())}"
-    )
-    print(
-        "  Términos distintos tabla-término: "
-        f"{len(table_vocabulary)}"
-    )
-    print(
-        "  Términos distintos globales: "
-        f"{len(global_vocabulary)}"
-    )
-
-    # ============================================================
-    # PASO 3
-    # ============================================================
-
-    print()
-    print("=" * 80)
-    print("PASO 3: IDENTIFICACIÓN DE GEOGRAFÍAS Geo(t)")
-    print("=" * 80)
 
     nuts_path = find_single_file(
         paths.nuts,
@@ -274,33 +222,18 @@ def run_pipeline() -> None:
         output_directory=paths.intermediate,
     )
 
-    print()
-    print("Resultado del paso 3:")
     print(
-        "  Entradas del diccionario geográfico: "
-        f"{len(geography_dictionary)}"
-    )
-    print(
-        "  Geografías tabla-término detectadas: "
-        f"{len(geographical_terms)}"
-    )
-    print(
-        "  Geografías globales distintas: "
-        f"{geographical_terms['normalized_term'].nunique()}"
-    )
-    print(
-        "  Términos restantes tabla-término: "
-        f"{len(vocabulary_without_geo)}"
-    )
-    print(
-        "  Términos restantes globales: "
+        "Step 3 completed | "
+        f"Dictionary entries: {len(geography_dictionary)} | "
+        f"Geographical table-term pairs: "
+        f"{len(geographical_terms)} | "
+        f"Distinct geographies: "
+        f"{geographical_terms['normalized_term'].nunique()} | "
+        f"Remaining table-term pairs: "
+        f"{len(vocabulary_without_geo)} | "
+        f"Remaining global terms: "
         f"{len(global_vocabulary_without_geo)}"
     )
-
-    print()
-    print("=" * 80)
-    print("PASOS 4 Y 5: TÍTULOS Y VOCABULARIO GLOBAL V")
-    print("=" * 80)
 
     titles_path = find_single_file(
         paths.titles,
@@ -366,39 +299,18 @@ def run_pipeline() -> None:
         ).sum()
     )
 
-    print()
-    print("Resultado de los pasos 4 y 5:")
     print(
-        f"  Títulos asociados: {matched_titles}"
-    )
-    print(
-        f"  Tablas sin título: {missing_titles}"
-    )
-    print(
-        "  Fechas extraídas de títulos: "
-        f"{len(title_dates)}"
-    )
-    print(
-        "  Geografías extraídas de títulos: "
-        f"{len(title_geographies)}"
-    )
-    print(
-        "  Títulos residuales añadidos: "
-        f"{len(title_vocabulary)}"
-    )
-    print(
-        "  Pares tabla-término en V(t): "
-        f"{len(final_table_vocabulary)}"
-    )
-    print(
-        "  Términos distintos en V: "
+        "Steps 4 and 5 completed | "
+        f"Matched titles: {matched_titles} | "
+        f"Missing titles: {missing_titles} | "
+        f"Title dates: {len(title_dates)} | "
+        f"Title geographies: {len(title_geographies)} | "
+        f"Residual titles: {len(title_vocabulary)} | "
+        f"Final table-term pairs: "
+        f"{len(final_table_vocabulary)} | "
+        f"Final global terms: "
         f"{len(final_global_vocabulary)}"
     )
-
-    print()
-    print("=" * 80)
-    print("PASO 6: CLASIFICACIÓN DEL VOCABULARIO V")
-    print("=" * 80)
 
     classification, classification_summary = (
         classify_global_vocabulary(
@@ -418,37 +330,17 @@ def run_pipeline() -> None:
         .to_dict()
     )
 
-    print()
-    print("Resultado del paso 6:")
     print(
-        "  Medidas: "
-        f"{category_counts.get('measure', 0)}"
+        "Step 6 completed | "
+        f"Measures: {category_counts.get('measure', 0)} | "
+        f"Dimension names: "
+        f"{category_counts.get('dimension_name', 0)} | "
+        f"Dimension values: "
+        f"{category_counts.get('dimension_value', 0)} | "
+        f"Units: {category_counts.get('unit', 0)} | "
+        f"Other: {category_counts.get('other', 0)} | "
+        f"Total: {len(classification)}"
     )
-    print(
-        "  Nombres de dimensiones: "
-        f"{category_counts.get('dimension_name', 0)}"
-    )
-    print(
-        "  Valores de dimensiones: "
-        f"{category_counts.get('dimension_value', 0)}"
-    )
-    print(
-        "  Unidades: "
-        f"{category_counts.get('unit', 0)}"
-    )
-    print(
-        "  Other: "
-        f"{category_counts.get('other', 0)}"
-    )
-    print(
-        "  Total clasificado: "
-        f"{len(classification)}"
-    )
-
-    print()
-    print("=" * 80)
-    print("PASO 7: AGRUPACIÓN DE MEDIDAS POR DOMINIOS")
-    print("=" * 80)
 
     measures = classification[
         classification["category"] == "measure"
@@ -469,42 +361,17 @@ def run_pipeline() -> None:
         output_directory=paths.outputs,
     )
 
-    print()
-    print("Resultado del paso 7:")
     print(
-        f"  Medidas agrupadas: "
-        f"{len(domain_assignments)}"
-    )
-    print(
-        f"  Dominios utilizados: "
-        f"{domain_assignments['domain'].nunique()}"
-    )
-    print(
-        "  Asignaciones con confianza alta: "
-        f"{int((domain_assignments['confidence'] == 'high').sum())}"
-    )
-    print(
-        "  Asignaciones con confianza media: "
-        f"{int((domain_assignments['confidence'] == 'medium').sum())}"
-    )
-    print(
-        "  Asignaciones con confianza baja: "
+        "Step 7 completed | "
+        f"Measures assigned: {len(domain_assignments)} | "
+        f"Domains: "
+        f"{domain_assignments['domain'].nunique()} | "
+        f"High confidence: "
+        f"{int((domain_assignments['confidence'] == 'high').sum())} | "
+        f"Medium confidence: "
+        f"{int((domain_assignments['confidence'] == 'medium').sum())} | "
+        f"Low confidence: "
         f"{int((domain_assignments['confidence'] == 'low').sum())}"
     )
 
-    print()
-    print("Distribución por dominio:")
-    print(
-        domain_summary[
-            [
-                "domain",
-                "measure_count",
-                "average_score",
-            ]
-        ].to_string(index=False)
-    )
-
-    print()
-    print("=" * 80)
-    print("PASOS 1 A 7 FINALIZADOS")
-    print("=" * 80)
+    print("Pipeline completed successfully.")

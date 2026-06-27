@@ -170,6 +170,7 @@ def column_is_measure(column_name: str) -> bool:
 
     return False
 
+
 def looks_like_unit(term: str) -> bool:
     normalized = normalize_context(term)
 
@@ -202,8 +203,10 @@ def looks_like_measure(term: str) -> bool:
         for keyword in MEASURE_KEYWORDS
     )
 
+
 def looks_like_dimension_value(term: str) -> bool:
     normalized = normalize_context(term)
+
     geographical_aggregate_prefixes = (
         "euro area",
         "extra euro area",
@@ -236,11 +239,15 @@ def looks_like_dimension_value(term: str) -> bool:
 
     return False
 
+
 def is_invalid_term(term: str) -> bool:
     normalized = normalize_context(term)
+
     if not normalized:
         return True
+
     return re.search(r"[a-z0-9]", normalized) is None
+
 
 def collect_term_evidence(
     table_vocabulary: pd.DataFrame,
@@ -344,16 +351,12 @@ def collect_term_evidence(
 
         if active_contexts > 1:
             record["mixed_context_tables"].add(filename)
-
         elif unit_columns:
             record["unit_only_tables"].add(filename)
-
         elif measure_columns:
             record["measure_only_tables"].add(filename)
-
         elif generic_columns:
             record["generic_only_tables"].add(filename)
-
 
     return evidence
 
@@ -399,7 +402,7 @@ def classify_one_term(
     unit_lexical = looks_like_unit(term)
     measure_lexical = looks_like_measure(term)
     dimension_value_lexical = looks_like_dimension_value(term)
-    
+
     dominant_non_header = max(
         unit_only_count,
         measure_only_count,
@@ -436,7 +439,9 @@ def classify_one_term(
             )
         else:
             confidence = "high"
-            reason = "Predominantly appears as a descriptive table header."
+            reason = (
+                "Predominantly appears as a descriptive table header."
+            )
 
     elif dimension_value_lexical:
         category = "dimension_value"
@@ -488,7 +493,7 @@ def classify_one_term(
             reason = (
                 "Matches a unit pattern but appears in a mixed context."
             )
-            
+
     elif unit_only_count > max(
         measure_only_count,
         generic_only_count,
@@ -496,7 +501,9 @@ def classify_one_term(
     ):
         category = "unit"
         confidence = "high"
-        reason = "Predominantly appears exclusively in unit columns."
+        reason = (
+            "Predominantly appears exclusively in unit columns."
+        )
 
     elif measure_only_count > max(
         unit_only_count,
@@ -684,9 +691,5 @@ def save_classification_results(
         )
 
     print(
-        "Clasification saving in: "
-        f"{output_directory / 'classification_all.csv'}"
+        f"Classification results saved to: {output_directory}"
     )
-
-    for filename in category_files.values():
-        print(f"  - {output_directory / filename}")

@@ -53,15 +53,7 @@ COUNTRY_ALIASES = {
 
 
 def normalize_geography(value: object) -> str:
-    """
-    Normaliza un nombre geográfico para poder compararlo.
-
-    Ejemplo:
-        Île-de-France -> ile de france
-        Région de Bruxelles-Capitale -> region de bruxelles capitale
-    """
     text = str(value)
-
     text = unicodedata.normalize("NFKC", text)
     text = unidecode(text)
     text = text.casefold()
@@ -73,11 +65,6 @@ def normalize_geography(value: object) -> str:
 
 
 def generate_label_variants(label: object) -> set[str]:
-    """
-    Genera variantes de una etiqueta NUTS.
-
-    Algunas etiquetas contienen dos nombres separados por '/'.
-    """
     text = str(label).strip()
 
     if not text:
@@ -99,15 +86,6 @@ def generate_label_variants(label: object) -> set[str]:
 def build_geography_dictionary(
     nuts_path: Path,
 ) -> pd.DataFrame:
-    """
-    Construye el diccionario de nombres y códigos geográficos.
-
-    Utiliza:
-    - NUTS 2024;
-    - Statistical Regions;
-    - transliteraciones;
-    - nombres de países asociados a sus códigos.
-    """
     records: list[dict[str, str]] = []
     seen: set[tuple[str, str]] = set()
 
@@ -143,10 +121,6 @@ def build_geography_dictionary(
             }
         )
 
-    # ---------------------------------------------------------
-    # NUTS 2024
-    # ---------------------------------------------------------
-
     nuts = read_excel_sheet(
         nuts_path,
         sheet_name="NUTS2024",
@@ -170,10 +144,6 @@ def build_geography_dictionary(
                 code=code,
                 source="NUTS2024_label",
             )
-
-    # ---------------------------------------------------------
-    # Regiones estadísticas no pertenecientes a NUTS
-    # ---------------------------------------------------------
 
     statistical_regions = read_excel_sheet(
         nuts_path,
@@ -199,10 +169,6 @@ def build_geography_dictionary(
                 source="Statistical_region_label",
             )
 
-    # ---------------------------------------------------------
-    # Transliteration de nombres griegos y cirílicos
-    # ---------------------------------------------------------
-
     transliterations = read_excel_sheet(
         nuts_path,
         sheet_name="Cyrillic & Greek to Latin",
@@ -226,10 +192,6 @@ def build_geography_dictionary(
             code=code,
             source="Latin_transliteration",
         )
-
-    # ---------------------------------------------------------
-    # Países
-    # ---------------------------------------------------------
 
     for country_code, aliases in COUNTRY_ALIASES.items():
         canonical_name = aliases[0]
@@ -269,9 +231,6 @@ def identify_geographical_terms(
     table_vocabulary: pd.DataFrame,
     geography_dictionary: pd.DataFrame,
 ) -> pd.DataFrame:
-    """
-    Identifica los términos de S(t) que son unidades geográficas.
-    """
     alias_lookup: dict[str, dict[str, str]] = {}
 
     for _, row in geography_dictionary.iterrows():
@@ -325,9 +284,6 @@ def remove_geographies_from_vocabulary(
     table_vocabulary: pd.DataFrame,
     geographical_terms: pd.DataFrame,
 ) -> pd.DataFrame:
-    """
-    Construye V(t) eliminando Geo(t) de S(t).
-    """
     if geographical_terms.empty:
         return table_vocabulary.copy()
 
@@ -354,7 +310,6 @@ def build_geography_summary(
     vocabulary_without_geo: pd.DataFrame,
     geographical_terms: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Crea un resumen del paso 3 para cada tabla."""
     original_counts = (
         table_vocabulary.groupby("filename")
         .size()
@@ -409,7 +364,6 @@ def save_geography_results(
     summary: pd.DataFrame,
     output_directory: Path,
 ) -> None:
-    """Guarda los resultados del paso 3."""
     output_directory.mkdir(
         parents=True,
         exist_ok=True,
@@ -445,17 +399,4 @@ def save_geography_results(
         encoding="utf-8",
     )
 
-    print(
-        "Diccionario geográfico guardado en: "
-        f"{output_directory / 'geography_dictionary.csv'}"
-    )
-
-    print(
-        "Geo(t) guardado en: "
-        f"{output_directory / 'table_geographies.csv'}"
-    )
-
-    print(
-        "V(t) provisional guardado en: "
-        f"{output_directory / 'table_vocabulary_without_geo.csv'}"
-    )
+    print(f"Geography results saved to: {output_directory}")

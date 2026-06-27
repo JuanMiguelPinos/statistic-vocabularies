@@ -10,7 +10,7 @@ DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "config.yaml"
 
 
 class ConfigurationError(RuntimeError):
-    """Error occurred while loading or validating the configuration."""
+    pass
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,7 @@ def load_config(config_path: Path | None = None) -> dict[str, Any]:
 
     if not path.exists():
         raise ConfigurationError(
-            f"The configuration file could not be found.: {path}"
+            f"Configuration file not found: {path}"
         )
 
     try:
@@ -48,17 +48,17 @@ def load_config(config_path: Path | None = None) -> dict[str, Any]:
             config = yaml.safe_load(file)
     except yaml.YAMLError as exc:
         raise ConfigurationError(
-            f"YAML file has not a valid format: {exc}"
+            f"Invalid YAML configuration: {exc}"
         ) from exc
 
     if not isinstance(config, dict):
         raise ConfigurationError(
-            "config.yaml file should contain a dictionary."
+            "The configuration file must contain a mapping."
         )
 
     if "paths" not in config:
         raise ConfigurationError(
-            "Paths selection is missing in config.yaml."
+            "The 'paths' section is missing from config.yaml."
         )
 
     return config
@@ -83,7 +83,7 @@ def get_project_paths(config: dict[str, Any]) -> ProjectPaths:
     if missing:
         missing_text = ", ".join(sorted(missing))
         raise ConfigurationError(
-            f"Routes are missing in config.yaml: {missing_text}"
+            f"Missing paths in config.yaml: {missing_text}"
         )
 
     return ProjectPaths(

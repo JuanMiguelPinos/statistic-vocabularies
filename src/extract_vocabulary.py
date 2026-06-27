@@ -1,10 +1,10 @@
+import csv
 import re
 import unicodedata
 from pathlib import Path
 
 import pandas as pd
 from tqdm import tqdm
-import csv
 
 from src.extract_time import extract_time_interval
 from src.io_utils import read_csv_flexible
@@ -43,9 +43,6 @@ MALFORMED_QUOTE_FILES = {
 
 
 def normalize_term(value: object) -> str:
-    """
-    Limpia un término sin destruir su significado.
-    """
     if value is None:
         return ""
 
@@ -95,7 +92,6 @@ def normalize_term(value: object) -> str:
 
 
 def is_numeric_value(value: object) -> bool:
-    """Indica si un valor es exclusivamente numérico."""
     text = normalize_term(value)
 
     if not text:
@@ -109,9 +105,6 @@ def is_numeric_value(value: object) -> bool:
 def is_valid_vocabulary_term(
     value: object,
 ) -> bool:
-    """
-    Comprueba si un valor debe formar parte de S(t).
-    """
     text = normalize_term(value)
 
     if not text:
@@ -137,14 +130,10 @@ def is_valid_vocabulary_term(
 def find_semantic_column_count(
     columns: list[object],
 ) -> int:
-    """
-    Determina cuántas columnas iniciales forman el bloque descriptivo.
-    """
     for index, column in enumerate(columns):
         if extract_time_interval(column) is not None:
             return index
 
-    # Caso especial: cabecera numérica que no es una fecha válida.
     for index, column in enumerate(columns):
         if is_numeric_value(column):
             return index
@@ -160,12 +149,6 @@ def register_term(
     column_name: str,
     occurrence_count: int = 1,
 ) -> None:
-    """
-    Registra un término y acumula sus apariciones.
-
-    occurrence_count permite procesar valores agrupados mediante
-    value_counts sin recorrer cada celda individualmente.
-    """
     term = normalize_term(value)
 
     if not is_valid_vocabulary_term(term):
@@ -194,7 +177,6 @@ def register_term(
 def terms_to_records(
     terms: dict[str, dict[str, object]],
 ) -> list[dict[str, object]]:
-    """Convierte el registro interno en filas serializables."""
     records: list[dict[str, object]] = []
 
     for information in terms.values():
@@ -240,12 +222,6 @@ def register_dataframe_values(
     filename: str,
     terms: dict[str, dict[str, object]],
 ) -> None:
-    """
-    Registra los valores de un bloque de datos.
-
-    Se emplea value_counts para no recorrer individualmente todas
-    las celdas repetidas de una tabla.
-    """
     for column in semantic_columns:
         if column not in dataframe.columns:
             continue
@@ -273,11 +249,6 @@ def extract_table_strings(
     dataframe: pd.DataFrame,
     filename: str,
 ) -> tuple[list[dict[str, object]], int]:
-    """
-    Construye S(t) desde un DataFrame ya cargado.
-
-    Se conserva para pruebas y para tablas pequeñas.
-    """
     columns = list(
         dataframe.columns
     )
@@ -322,6 +293,7 @@ def extract_table_strings(
         semantic_column_count,
     )
 
+
 def extract_table_strings_chunked(
     table_path: Path,
     chunk_size: int,
@@ -330,13 +302,6 @@ def extract_table_strings_chunked(
     int,
     int,
 ]:
-    """
-    Construye S(t) leyendo una tabla por bloques.
-
-    Las columnas descriptivas se seleccionan por posición para evitar
-    problemas con nombres duplicados, cabeceras extrañas o diferencias
-    entre los motores CSV.
-    """
     csv_read_options = {}
 
     if table_path.name.casefold() in MALFORMED_QUOTE_FILES:
@@ -367,7 +332,6 @@ def extract_table_strings_chunked(
         dict[str, object],
     ] = {}
 
-    # Registra las cabeceras descriptivas.
     for column in semantic_columns:
         clean_column = normalize_term(
             column
@@ -388,7 +352,6 @@ def extract_table_strings_chunked(
             0,
         )
 
-    # Se seleccionan las columnas por posición, no por nombre.
     semantic_column_positions = list(
         range(semantic_column_count)
     )
@@ -412,8 +375,6 @@ def extract_table_strings_chunked(
     for chunk in chunks_iterator:
         chunks_processed += 1
 
-        # Utilizamos los nombres que realmente ha generado pandas
-        # en este bloque.
         chunk_columns = list(
             chunk.columns
         )
@@ -436,13 +397,9 @@ def build_table_string_vocabulary(
     table_files: list[Path],
     chunk_size: int = 20_000,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Extrae S(t) para todas las tablas del corpus mediante lectura
-    por bloques, evitando cargar cada archivo completo en memoria.
-    """
     if chunk_size <= 0:
         raise ValueError(
-            "chunk_size debe ser mayor que cero."
+            "chunk_size must be greater than zero."
         )
 
     vocabulary_records: list[
@@ -455,8 +412,8 @@ def build_table_string_vocabulary(
 
     for table_path in tqdm(
         table_files,
-        desc="Extrayendo S(t)",
-        unit="tabla",
+        desc="Extracting S(t)",
+        unit="table",
     ):
         try:
             (
@@ -544,9 +501,6 @@ def build_table_string_vocabulary(
 def build_global_table_vocabulary(
     table_vocabulary: pd.DataFrame,
 ) -> pd.DataFrame:
-    """
-    Une todos los S(t) para crear un vocabulario global provisional.
-    """
     if table_vocabulary.empty:
         return pd.DataFrame(
             columns=[
@@ -618,7 +572,6 @@ def save_vocabulary_results(
     summary: pd.DataFrame,
     output_directory: Path,
 ) -> None:
-    """Guarda los resultados del paso 2."""
     output_directory.mkdir(
         parents=True,
         exist_ok=True,
@@ -657,15 +610,4 @@ def save_vocabulary_results(
         encoding="utf-8",
     )
 
-    print(
-        f"S(t) guardado en: {table_path}"
-    )
-
-    print(
-        "Vocabulario global provisional guardado en: "
-        f"{global_path}"
-    )
-
-    print(
-        f"Resumen guardado en: {summary_path}"
-    )
+    print(f"Vocabulary results saved to: {output_directory}")

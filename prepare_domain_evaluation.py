@@ -1,8 +1,10 @@
-from pathlib import Path
-
 import pandas as pd
 
-from src.config import PROJECT_ROOT
+from src.config import (
+    PROJECT_ROOT,
+    get_project_paths,
+    load_config,
+)
 
 
 CONFIDENCE_LEVELS = [
@@ -17,11 +19,6 @@ def create_domain_sample(
     samples_per_domain: int = 5,
     random_state: int = 42,
 ) -> pd.DataFrame:
-    """
-    Crea una muestra estratificada de medidas por dominio.
-
-    Intenta incluir ejemplos de confianza baja, media y alta.
-    """
     required_columns = {
         "term",
         "normalized_term",
@@ -42,7 +39,7 @@ def create_domain_sample(
 
     if missing_columns:
         raise ValueError(
-            "Faltan columnas en measure_domains.csv: "
+            "Missing columns in measure_domains.csv: "
             + ", ".join(sorted(missing_columns))
         )
 
@@ -67,8 +64,6 @@ def create_domain_sample(
 
         selected_indices: set[int] = set()
 
-        # Intenta seleccionar al menos un ejemplo
-        # por nivel de confianza.
         for confidence_index, confidence in enumerate(
             CONFIDENCE_LEVELS
         ):
@@ -179,27 +174,23 @@ def create_domain_sample(
 def print_sample_summary(
     sample: pd.DataFrame,
 ) -> None:
-    """Imprime la distribución de la muestra."""
-    print()
-    print("Distribución de la muestra por dominio:")
-
     counts = (
         sample["predicted_domain"]
         .value_counts()
         .sort_index()
     )
 
-    for domain, count in counts.items():
-        print(f"  {domain}: {count}")
+    print("Sample distribution by domain:")
 
-    print()
-    print(f"Total de términos: {len(sample)}")
+    for domain, count in counts.items():
+        print(f"{domain}: {count}")
+
+    print(f"Total terms: {len(sample)}")
 
 
 def print_domain_examples(
     sample: pd.DataFrame,
 ) -> None:
-    """Imprime los términos seleccionados por dominio."""
     domains = sorted(
         sample["predicted_domain"]
         .unique()
@@ -211,10 +202,7 @@ def print_domain_examples(
             sample["predicted_domain"] == domain
         ]
 
-        print()
-        print("=" * 80)
-        print(f"DOMINIO PREDICHO: {domain}")
-        print("=" * 80)
+        print(f"\nPredicted domain: {domain}")
 
         print(
             domain_sample[
@@ -230,9 +218,11 @@ def print_domain_examples(
 
 
 def main() -> None:
+    config = load_config()
+    paths = get_project_paths(config)
+
     assignments_path = (
-        PROJECT_ROOT
-        / "outputs"
+        paths.outputs
         / "measure_domains.csv"
     )
 
@@ -244,8 +234,8 @@ def main() -> None:
 
     if not assignments_path.exists():
         raise FileNotFoundError(
-            "No se encuentra outputs/measure_domains.csv. "
-            "Ejecuta primero python main.py."
+            f"Domain assignment file not found: {assignments_path}. "
+            "Run python main.py first."
         )
 
     assignments = pd.read_csv(
@@ -270,11 +260,7 @@ def main() -> None:
         encoding="utf-8-sig",
     )
 
-    print(
-        "Muestra de dominios guardada en: "
-        f"{output_path}"
-    )
-
+    print(f"Domain evaluation sample saved to: {output_path}")
     print_sample_summary(sample)
     print_domain_examples(sample)
 

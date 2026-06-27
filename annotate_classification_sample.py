@@ -18,7 +18,6 @@ def save_progress(
     sample: pd.DataFrame,
     sample_path: Path,
 ) -> None:
-    """Guarda el progreso de la anotación manual."""
     sample.to_csv(
         sample_path,
         index=False,
@@ -30,7 +29,6 @@ def update_correctness(
     sample: pd.DataFrame,
     row_index: int,
 ) -> None:
-    """Indica si la predicción coincide con la categoría manual."""
     predicted = str(
         sample.at[row_index, "predicted_category"]
     ).strip()
@@ -48,32 +46,19 @@ def update_correctness(
 
 
 def print_instructions() -> None:
-    """Muestra las categorías disponibles."""
-    print("=" * 80)
-    print("ANOTACIÓN MANUAL DE LA MUESTRA")
-    print("=" * 80)
+    print("Manual classification annotation")
     print()
-    print("Categorías:")
-    print("  1 = measure")
-    print("      Qué se mide, cuenta, calcula o estima.")
+    print("Categories:")
+    print("1 = measure")
+    print("2 = dimension_name")
+    print("3 = dimension_value")
+    print("4 = unit")
+    print("5 = other")
     print()
-    print("  2 = dimension_name")
-    print("      Nombre de un criterio o variable de clasificación.")
-    print()
-    print("  3 = dimension_value")
-    print("      Valor concreto de una dimensión o categoría.")
-    print()
-    print("  4 = unit")
-    print("      Forma numérica en la que se expresa una medida.")
-    print()
-    print("  5 = other")
-    print("      Texto vacío, corrupto o imposible de clasificar.")
-    print()
-    print("Controles:")
-    print("  Intro = aceptar la categoría predicha")
-    print("  p     = volver a la fila anterior")
-    print("  q     = guardar y salir")
-    print()
+    print("Controls:")
+    print("Enter = accept the predicted category")
+    print("p = return to the previous row")
+    print("q = save and exit")
 
 
 def main() -> None:
@@ -85,8 +70,8 @@ def main() -> None:
 
     if not sample_path.exists():
         raise FileNotFoundError(
-            "No se encuentra evaluation/gold_sample.csv. "
-            "Ejecuta primero python preparar_evaluacion.py."
+            "evaluation/gold_sample.csv was not found. "
+            "Run python prepare_classification_evaluation.py first."
         )
 
     sample = pd.read_csv(
@@ -112,7 +97,7 @@ def main() -> None:
 
     if missing_columns:
         raise ValueError(
-            "Faltan columnas en gold_sample.csv: "
+            "Missing columns in gold_sample.csv: "
             + ", ".join(sorted(missing_columns))
         )
 
@@ -125,14 +110,17 @@ def main() -> None:
         .ne("")
     )
 
-    annotated_count = int(annotated_mask.sum())
+    annotated_count = int(
+        annotated_mask.sum()
+    )
 
     print(
-        f"Progreso existente: {annotated_count}/{len(sample)}"
+        f"\nExisting progress: "
+        f"{annotated_count}/{len(sample)}"
     )
 
     if annotated_count == len(sample):
-        print("La muestra ya está completamente anotada.")
+        print("The sample is already fully annotated.")
         return
 
     unannotated_indices = sample.index[
@@ -144,26 +132,23 @@ def main() -> None:
     while 0 <= current_position < len(sample):
         row = sample.loc[current_position]
 
-        print()
-        print("=" * 80)
-        print(
-            f"MUESTRA {row['sample_id']} DE {len(sample)}"
-        )
-        print("=" * 80)
-
         term = str(row["term"]).strip()
 
         if not term:
-            term = "[TÉRMINO VACÍO]"
+            term = "[EMPTY TERM]"
 
-        print(f"Término: {term}")
         print(
-            "Predicción: "
+            f"\nSample {row['sample_id']} "
+            f"of {len(sample)}"
+        )
+        print(f"Term: {term}")
+        print(
+            "Predicted category: "
             f"{row['predicted_category']}"
         )
-        print(f"Confianza: {row['confidence']}")
-        print(f"Motivo: {row['reason']}")
-        print(f"Columnas: {row['columns']}")
+        print(f"Confidence: {row['confidence']}")
+        print(f"Reason: {row['reason']}")
+        print(f"Columns: {row['columns']}")
 
         existing_gold = str(
             row["gold_category"]
@@ -171,12 +156,12 @@ def main() -> None:
 
         if existing_gold:
             print(
-                f"Categoría manual actual: {existing_gold}"
+                "Current gold category: "
+                f"{existing_gold}"
             )
 
-        print()
         answer = input(
-            "Categoría [1-5, Intro, p, q]: "
+            "Category [1-5, Enter, p, q]: "
         ).strip().casefold()
 
         if answer == "q":
@@ -193,9 +178,8 @@ def main() -> None:
                 .sum()
             )
 
-            print()
             print(
-                f"Progreso guardado: "
+                f"Progress saved: "
                 f"{completed}/{len(sample)}"
             )
             return
@@ -204,7 +188,7 @@ def main() -> None:
             if current_position > 0:
                 current_position -= 1
             else:
-                print("Ya estás en la primera fila.")
+                print("This is the first row.")
 
             continue
 
@@ -218,8 +202,8 @@ def main() -> None:
 
         else:
             print(
-                "Opción no válida. Introduce 1, 2, 3, "
-                "4, 5, p, q o pulsa Intro."
+                "Invalid option. Enter 1, 2, 3, 4, 5, "
+                "p, q, or press Enter."
             )
             continue
 
@@ -248,12 +232,11 @@ def main() -> None:
         .sum()
     )
 
-    print()
-    print("=" * 80)
-    print("ANOTACIÓN FINALIZADA")
-    print("=" * 80)
-    print(f"Filas anotadas: {completed}/{len(sample)}")
-    print(f"Archivo guardado en: {sample_path}")
+    print(
+        f"Annotation completed: "
+        f"{completed}/{len(sample)}"
+    )
+    print(f"Sample saved to: {sample_path}")
 
 
 if __name__ == "__main__":

@@ -15,7 +15,6 @@ from src.extract_vocabulary import (
 
 
 MONTH_WORDS = [
-    # Inglés
     "January",
     "February",
     "March",
@@ -28,8 +27,6 @@ MONTH_WORDS = [
     "October",
     "November",
     "December",
-
-    # Francés
     "Janvier",
     "Février",
     "Fevrier",
@@ -58,25 +55,18 @@ MONTH_ALTERNATION = "|".join(
 YEAR_EXPRESSION = r"(?:19\d{2}|20\d{2}|2100)"
 
 TIME_PATTERNS = [
-    # Ejemplo: (2015 = 100)
     re.compile(
         rf"\(\s*{YEAR_EXPRESSION}\s*=\s*100\s*\)",
         flags=re.IGNORECASE,
     ),
-
-    # Ejemplo: 2024-03-15
     re.compile(
         rf"\b{YEAR_EXPRESSION}[-/]\d{{2}}[-/]\d{{2}}\b",
         flags=re.IGNORECASE,
     ),
-
-    # Ejemplo: 2010-2020
     re.compile(
         rf"\b{YEAR_EXPRESSION}\s*[-–/]\s*{YEAR_EXPRESSION}\b",
         flags=re.IGNORECASE,
     ),
-
-    # Ejemplo: 2024-Q1 o Q1 2024
     re.compile(
         rf"\b{YEAR_EXPRESSION}[\s._-]*Q[1-4]\b",
         flags=re.IGNORECASE,
@@ -85,27 +75,19 @@ TIME_PATTERNS = [
         rf"\bQ[1-4][\s._-]*{YEAR_EXPRESSION}\b",
         flags=re.IGNORECASE,
     ),
-
-    # Ejemplo: 2024-M03
     re.compile(
         rf"\b{YEAR_EXPRESSION}[\s._-]*M(?:0?[1-9]|1[0-2])\b",
         flags=re.IGNORECASE,
     ),
-
-    # Ejemplo: Janvier-Juin 2024
     re.compile(
         rf"\b(?:{MONTH_ALTERNATION})\s*[-–]\s*"
         rf"(?:{MONTH_ALTERNATION})\s+{YEAR_EXPRESSION}\b",
         flags=re.IGNORECASE,
     ),
-
-    # Ejemplo: January 2024
     re.compile(
         rf"\b(?:{MONTH_ALTERNATION})\s+{YEAR_EXPRESSION}\b",
         flags=re.IGNORECASE,
     ),
-
-    # Años individuales
     re.compile(
         rf"\b{YEAR_EXPRESSION}\b",
         flags=re.IGNORECASE,
@@ -131,7 +113,6 @@ def spans_overlap(
     end: int,
     occupied_spans: list[tuple[int, int]],
 ) -> bool:
-    """Comprueba si un intervalo se solapa con otro."""
     return any(
         start < occupied_end and end > occupied_start
         for occupied_start, occupied_end in occupied_spans
@@ -139,7 +120,6 @@ def spans_overlap(
 
 
 def normalize_time_mention(raw_text: str) -> str | None:
-    """Normaliza una fecha encontrada dentro de un título."""
     text = raw_text.strip("() ")
 
     base_year_match = re.search(
@@ -155,7 +135,6 @@ def normalize_time_mention(raw_text: str) -> str | None:
     if normalized is not None:
         return normalized
 
-    # Facilita formatos como "2024 Q1".
     text = re.sub(
         rf"({YEAR_EXPRESSION})\s+Q([1-4])",
         r"\1-Q\2",
@@ -177,11 +156,6 @@ def normalize_time_mention(raw_text: str) -> str | None:
 def extract_time_mentions(
     title: str,
 ) -> list[dict[str, object]]:
-    """
-    Extrae fechas que aparecen dentro de un título.
-
-    Se guardan también sus posiciones para poder retirarlas.
-    """
     mentions: list[dict[str, object]] = []
     occupied_spans: list[tuple[int, int]] = []
 
@@ -224,13 +198,13 @@ def extract_time_mentions(
 def tokenize_with_spans(
     text: str,
 ) -> list[tuple[str, int, int]]:
-    """
-    Divide un texto en palabras normalizadas conservando
-    sus posiciones en el texto original.
-    """
     tokens: list[tuple[str, int, int]] = []
 
-    for match in re.finditer(r"\w+", text, flags=re.UNICODE):
+    for match in re.finditer(
+        r"\w+",
+        text,
+        flags=re.UNICODE,
+    ):
         normalized = normalize_geography(
             match.group(0)
         )
@@ -253,11 +227,11 @@ def tokenize_with_spans(
 def build_title_geography_index(
     geography_dictionary: pd.DataFrame,
 ) -> dict[str, list[dict[str, object]]]:
-    """
-    Organiza las geografías por su primera palabra para
-    buscarlas eficientemente en los títulos.
-    """
-    index: dict[str, list[dict[str, object]]] = defaultdict(list)
+    index: dict[
+        str,
+        list[dict[str, object]],
+    ] = defaultdict(list)
+
     seen_aliases: set[str] = set()
 
     for _, row in geography_dictionary.iterrows():
@@ -269,8 +243,6 @@ def build_title_geography_index(
             row["dictionary_source"]
         )
 
-        # Evita tratar códigos cortos como IT, AT o IS como
-        # geografías dentro de frases normales.
         if "code" in source.casefold():
             continue
 
@@ -321,9 +293,11 @@ def build_title_geography_index(
 
 def extract_geography_mentions(
     title: str,
-    geography_index: dict[str, list[dict[str, object]]],
+    geography_index: dict[
+        str,
+        list[dict[str, object]],
+    ],
 ) -> list[dict[str, object]]:
-    """Busca nombres geográficos dentro de un título."""
     tokens = tokenize_with_spans(title)
     mentions: list[dict[str, object]] = []
 
@@ -331,6 +305,7 @@ def extract_geography_mentions(
 
     while position < len(tokens):
         current_token = tokens[position][0]
+
         candidates = geography_index.get(
             current_token,
             [],
@@ -394,7 +369,6 @@ def remove_text_spans(
     text: str,
     spans: list[tuple[int, int]],
 ) -> str:
-    """Elimina intervalos del texto sin alterar las posiciones."""
     if not spans:
         return text
 
@@ -408,7 +382,6 @@ def remove_text_spans(
 
 
 def clean_residual_title(title: str) -> str:
-    """Limpia el título después de quitar fechas y geografías."""
     text = title
 
     text = re.sub(r"[\[\](){}]", " ", text)
@@ -418,7 +391,6 @@ def clean_residual_title(title: str) -> str:
 
     text = text.strip(" ,;:-")
 
-    # Elimina preposiciones que hayan quedado colgando al final.
     text = re.sub(
         r"\b(?:in|at|during|from|to)\s*$",
         "",
@@ -439,15 +411,6 @@ def process_titles(
     pd.DataFrame,
     pd.DataFrame,
 ]:
-    """
-    Procesa τ(t) para las tablas del corpus pequeño.
-
-    Devuelve:
-    - resumen de títulos;
-    - términos procedentes de títulos;
-    - fechas encontradas;
-    - geografías encontradas.
-    """
     normalized_columns = {
         str(column).strip().casefold(): column
         for column in titles.columns
@@ -455,12 +418,12 @@ def process_titles(
 
     if "filename" not in normalized_columns:
         raise ValueError(
-            "El archivo de títulos no contiene la columna 'filename'."
+            "The titles file does not contain a 'filename' column."
         )
 
     if "title" not in normalized_columns:
         raise ValueError(
-            "El archivo de títulos no contiene la columna 'title'."
+            "The titles file does not contain a 'title' column."
         )
 
     filename_column = normalized_columns["filename"]
@@ -475,10 +438,21 @@ def process_titles(
         geography_dictionary
     )
 
-    processing_records: list[dict[str, object]] = []
-    title_vocabulary_records: list[dict[str, object]] = []
-    date_records: list[dict[str, object]] = []
-    geography_records: list[dict[str, object]] = []
+    processing_records: list[
+        dict[str, object]
+    ] = []
+
+    title_vocabulary_records: list[
+        dict[str, object]
+    ] = []
+
+    date_records: list[
+        dict[str, object]
+    ] = []
+
+    geography_records: list[
+        dict[str, object]
+    ] = []
 
     processed_filenames: set[str] = set()
 
@@ -490,8 +464,8 @@ def process_titles(
     for _, row in tqdm(
         title_rows.iterrows(),
         total=len(title_rows),
-        desc="Procesando títulos",
-        unit="título",
+        desc="Processing titles",
+        unit="title",
     ):
         source_filename = str(
             row[filename_column]
@@ -504,10 +478,17 @@ def process_titles(
         if canonical_filename is None:
             continue
 
-        title = str(row[title_column]).strip()
-        processed_filenames.add(canonical_filename)
+        title = str(
+            row[title_column]
+        ).strip()
 
-        time_mentions = extract_time_mentions(title)
+        processed_filenames.add(
+            canonical_filename
+        )
+
+        time_mentions = extract_time_mentions(
+            title
+        )
 
         geography_mentions = extract_geography_mentions(
             title=title,
@@ -520,7 +501,8 @@ def process_titles(
                 int(mention["end"]),
             )
             for mention in (
-                time_mentions + geography_mentions
+                time_mentions
+                + geography_mentions
             )
         ]
 
@@ -565,14 +547,18 @@ def process_titles(
                     "canonical_name": mention[
                         "canonical_name"
                     ],
-                    "geo_code": mention["geo_code"],
+                    "geo_code": mention[
+                        "geo_code"
+                    ],
                     "dictionary_source": mention[
                         "dictionary_source"
                     ],
                 }
             )
 
-        if is_valid_vocabulary_term(residual_title):
+        if is_valid_vocabulary_term(
+            residual_title
+        ):
             title_vocabulary_records.append(
                 {
                     "filename": canonical_filename,
@@ -658,8 +644,9 @@ def process_titles(
     )
 
 
-def merge_pipe_values(values: pd.Series) -> str:
-    """Une valores separados por | sin duplicarlos."""
+def merge_pipe_values(
+    values: pd.Series,
+) -> str:
     parts: set[str] = set()
 
     for value in values.dropna():
@@ -669,17 +656,15 @@ def merge_pipe_values(values: pd.Series) -> str:
             if clean_part:
                 parts.add(clean_part)
 
-    return "|".join(sorted(parts))
+    return "|".join(
+        sorted(parts)
+    )
 
 
 def combine_table_and_title_vocabulary(
     vocabulary_without_geo: pd.DataFrame,
     title_vocabulary: pd.DataFrame,
 ) -> pd.DataFrame:
-    """
-    Añade el vocabulario de los títulos a V(t) y elimina
-    duplicados dentro de cada tabla.
-    """
     combined = pd.concat(
         [
             vocabulary_without_geo,
@@ -702,8 +687,14 @@ def combine_table_and_title_vocabulary(
         )
         .agg(
             term=("term", "first"),
-            source=("source", merge_pipe_values),
-            columns=("columns", merge_pipe_values),
+            source=(
+                "source",
+                merge_pipe_values,
+            ),
+            columns=(
+                "columns",
+                merge_pipe_values,
+            ),
             occurrence_count=(
                 "occurrence_count",
                 "sum",
@@ -739,7 +730,6 @@ def save_title_results(
     final_global_vocabulary: pd.DataFrame,
     output_directory: Path,
 ) -> None:
-    """Guarda los resultados de los pasos 4 y 5."""
     output_directory.mkdir(
         parents=True,
         exist_ok=True,
@@ -781,12 +771,4 @@ def save_title_results(
         encoding="utf-8",
     )
 
-    print(
-        "Procesamiento de títulos guardado en: "
-        f"{output_directory / 'title_processing.csv'}"
-    )
-
-    print(
-        "Vocabulario global V guardado en: "
-        f"{output_directory / 'global_vocabulary.csv'}"
-    )
+    print(f"Title processing results saved to: {output_directory}")

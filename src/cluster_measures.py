@@ -38,7 +38,6 @@ DOMAIN_PROFILES = {
             "population growth",
         ],
     },
-
     "Labour market": {
         "description": (
             "Employment, unemployment, wages, earnings, labour costs, "
@@ -70,7 +69,6 @@ DOMAIN_PROFILES = {
             "monthly earnings",
         ],
     },
-
     "Economy and national accounts": {
         "description": (
             "Gross domestic product, national accounts, economic growth, "
@@ -100,7 +98,6 @@ DOMAIN_PROFILES = {
             "consumer price index",
         ],
     },
-
     "Business, industry and trade": {
         "description": (
             "Enterprises, industrial activity, production, turnover, "
@@ -133,7 +130,6 @@ DOMAIN_PROFILES = {
             "exports",
         ],
     },
-
     "Agriculture, forestry and fisheries": {
         "description": (
             "Agricultural production, farms, livestock, crops, forestry, "
@@ -166,7 +162,6 @@ DOMAIN_PROFILES = {
             "fisheries",
         ],
     },
-
     "Environment and climate": {
         "description": (
             "Environmental indicators, pollution, waste, emissions, "
@@ -198,7 +193,6 @@ DOMAIN_PROFILES = {
             "climate change",
         ],
     },
-
     "Energy": {
         "description": (
             "Energy production, energy consumption, electricity, fuels, "
@@ -226,7 +220,6 @@ DOMAIN_PROFILES = {
             "energy efficiency",
         ],
     },
-
     "Transport and mobility": {
         "description": (
             "Road, rail, air, maritime and inland transport, passengers, "
@@ -258,7 +251,6 @@ DOMAIN_PROFILES = {
             "freight transport",
         ],
     },
-
     "Health": {
         "description": (
             "Health status, diseases, hospitals, medical services, "
@@ -289,7 +281,6 @@ DOMAIN_PROFILES = {
             "medical treatment",
         ],
     },
-
     "Education and training": {
         "description": (
             "Education participation, educational attainment, schools, "
@@ -318,7 +309,6 @@ DOMAIN_PROFILES = {
             "vocational training",
         ],
     },
-
     "Science, technology and digital society": {
         "description": (
             "Research, innovation, science, technology, digital skills, "
@@ -349,7 +339,6 @@ DOMAIN_PROFILES = {
             "research expenditure",
         ],
     },
-
     "Income, poverty and living conditions": {
         "description": (
             "Poverty, social exclusion, household income, inequality, "
@@ -376,7 +365,6 @@ DOMAIN_PROFILES = {
             "social exclusion",
         ],
     },
-
     "Government and public finance": {
         "description": (
             "Government expenditure, public revenue, public debt, taxes, "
@@ -404,7 +392,6 @@ DOMAIN_PROFILES = {
             "public finance",
         ],
     },
-
     "Crime, justice and safety": {
         "description": (
             "Crime, violence, police, justice, courts, prisons, accidents "
@@ -434,7 +421,6 @@ DOMAIN_PROFILES = {
             "criminal offence",
         ],
     },
-
     "Tourism": {
         "description": (
             "Tourist arrivals, accommodation, nights spent, hotels, "
@@ -460,7 +446,6 @@ DOMAIN_PROFILES = {
             "tourism establishments",
         ],
     },
-
     "Housing and construction": {
         "description": (
             "Housing, dwellings, buildings, construction activity, "
@@ -717,6 +702,7 @@ def normalize_domain_text(value: object) -> str:
 
     return text
 
+
 def apply_domain_override(
     normalized_text: str,
 ) -> tuple[str | None, list[str]]:
@@ -731,6 +717,7 @@ def apply_domain_override(
             return domain, matches
 
     return None, []
+
 
 def keyword_is_present(
     normalized_text: str,
@@ -811,7 +798,7 @@ def cluster_measures_by_domain(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     if measures.empty:
         raise ValueError(
-            "There are not metrics for group."
+            "No measures were available for domain assignment."
         )
 
     required_columns = {
@@ -827,7 +814,7 @@ def cluster_measures_by_domain(
 
     if missing_columns:
         raise ValueError(
-            "Colums are missing in measure: "
+            "Missing columns in measures.csv: "
             + ", ".join(sorted(missing_columns))
         )
 
@@ -1097,7 +1084,7 @@ def cluster_measures_by_domain(
                     row.total_occurrences
                 ),
                 "matched_override_rules": "|".join(
-                override_matches
+                    override_matches
                 ),
             }
         )
@@ -1232,17 +1219,4 @@ def save_domain_results(
         encoding="utf-8",
     )
 
-    print(
-        "Domain assignment saved in: "
-        f"{assignments_path}"
-    )
-
-    print(
-        "Domain summary saved in: "
-        f"{summary_path}"
-    )
-
-    print(
-        "Domain examples saved in: "
-        f"{examples_path}"
-    )
+    print(f"Domain results saved to: {output_directory}")
