@@ -2,6 +2,10 @@
 
 Automatic extraction, classification and organisation of statistical vocabulary from Eurostat tables.
 
+## Repository
+
+https://github.com/JuanMiguelPinos/statistic-vocabularies
+
 ## Overview
 
 This project implements a reproducible pipeline for extracting and organising statistical vocabulary from a large collection of Eurostat tables.
