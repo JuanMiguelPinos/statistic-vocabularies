@@ -1,6 +1,0 @@
-category,precision,recall,f1_score,support
-measure,1.0,0.8,0.8888888888888888,25
-dimension_name,1.0,1.0,1.0,20
-dimension_value,0.8,0.8,0.8,20
-unit,0.65,1.0,0.7878787878787878,13
-other,1.0,0.3333333333333333,0.5,3

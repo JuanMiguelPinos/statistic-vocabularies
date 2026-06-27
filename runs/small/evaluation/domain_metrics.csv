@@ -1,2 +1,0 @@
-evaluated_terms,correct_terms,incorrect_terms,accuracy,macro_precision,macro_recall,macro_f1,weighted_precision,weighted_recall,weighted_f1
-85,73,12,0.8588235294117647,0.8588235294117647,0.8840336134453781,0.8459001782531195,0.9105882352941177,0.8588235294117647,0.8717468805704097
